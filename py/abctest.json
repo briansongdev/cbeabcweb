@@ -1,0 +1,34 @@
+{
+  "name": "Kai Test Winter",
+  "description": "",
+  "reference_time": "2021-02-23T09:40:16",
+  "output_freq": 60,
+  "options": {
+    "csvOutput": true,
+    "sensation_adaptation": false,
+    "sensation_coredTdt": false,
+    "ignore_segments": false,
+    "ignore_physiology": false,
+    "neutralSimulationOutput": false
+  },
+
+
+  "phases": [
+    {
+      "start_time": 0,
+	  "time_units": "hours",
+      "ramp": false,
+      "end_time": 10,
+      "met_activity_name": "Seated",
+      "met": 1,
+      "default_data": {
+        "rh": 0.50,
+        "v": 0.10,
+        "solar": 0,
+        "ta": 25,
+        "mrt": 25
+      },
+      "clo_ensemble_name": "Nude"
+    }
+  ]
+}
