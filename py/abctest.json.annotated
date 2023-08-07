@@ -1,0 +1,34 @@
+{
+  "name": "WebInterface Example",
+  "description": "Hello world wide web",
+  "reference_time": "2021-02-23T09:40:16",
+  "output_freq": 60,
+  "options": {
+    "csvOutput": false,
+    "sensation_adaptation": false,
+    "sensation_coredTdt": false,
+    "ignore_segments": false,
+    "ignore_physiology": false,
+    "neutralSimulationOutput": false
+  },
+
+
+  "phases": [
+    {
+      "start_time": 0,
+	    "time_units": "minutes",
+      "ramp": false,
+      "end_time": {GUI_Exposure_Duration},
+      "met_activity_name": "{GUI_Met_Name}",
+      "met": {GUI_Met_Value},
+      "default_data": {
+        "rh": {GUI_Relative_Humidity},
+        "v": {GUI_Air_Speed},
+        "solar": 0,
+        "ta": {GUI_Air_Temperature},
+        "mrt": {GUI_Mean_Radiant_Temperature}
+      },
+      "clo_ensemble_name": "{GUI_Clothing_json_Name}"
+    }
+  ]
+}

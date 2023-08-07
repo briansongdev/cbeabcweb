@@ -1,10 +1,10 @@
 {
-  "name": "Kai Test Winter",
-  "description": "",
+  "name": "WebInterface Example",
+  "description": "Hello world wide web",
   "reference_time": "2021-02-23T09:40:16",
   "output_freq": 60,
   "options": {
-    "csvOutput": true,
+    "csvOutput": false,
     "sensation_adaptation": false,
     "sensation_coredTdt": false,
     "ignore_segments": false,
@@ -16,9 +16,9 @@
   "phases": [
     {
       "start_time": 0,
-	  "time_units": "hours",
+	    "time_units": "minutes",
       "ramp": false,
-      "end_time": 10,
+      "end_time": 60,
       "met_activity_name": "Seated",
       "met": 1,
       "default_data": {
