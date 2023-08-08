@@ -548,9 +548,7 @@ export default function WithSubnavigation() {
                 <ReactECharts notMerge={true} option={graphOptions} />
               </Box>
             ) : (
-              <Text>
-                No data inputted yet. Please input and hit 'Simulate.'
-              </Text>
+              <Text>No data inputted yet. Please input and hit Simulate.</Text>
             )}
           </VStack>
         </HStack>
