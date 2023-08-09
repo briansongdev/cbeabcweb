@@ -1,10 +1,26 @@
 // title: Comfort and Sensation vs. Time
 // legends: ["Comfort", "Sensation"]
+
+const colorComfort = (comfort) => {
+  if (comfort < -1) return "black";
+  else if (comfort >= -1 && comfort <= 1) return "gray";
+  else return "white";
+};
+const colorSensation = (sensation) => {
+  if (sensation < -1) return "blue";
+  else if (sensation >= -1 && sensation <= 1) return "green";
+  else return "pink";
+};
+
 export const graphBuilderOptions = (data) => {
   const options = {
+    textStyle: {
+      fontFamily: "IBM Plex Sans",
+    },
     title: {
       text: data.title,
       left: "5%",
+      top: "8%",
     },
     tooltip: {
       trigger: "axis",
@@ -51,64 +67,31 @@ export const graphBuilderOptions = (data) => {
         name: data.legends[0],
         type: "line",
         data: data.data.map(function (item) {
-          return item.comfort;
+          return {
+            value: item.comfort,
+            itemStyle: {
+              normal: {
+                color: colorComfort(item.comfort),
+              },
+            },
+          };
         }),
       },
       {
         name: data.legends[1],
         type: "line",
         data: data.data.map(function (item) {
-          return item.sensation;
+          return {
+            value: item.sensation,
+            itemStyle: {
+              normal: {
+                color: colorSensation(item.sensation),
+              },
+            },
+          };
         }),
       },
     ],
   };
-  if (data.showRange)
-    options.visualMap = {
-      show: false,
-      top: 50,
-      right: 5,
-      pieces: [
-        {
-          gt: -1,
-          lte: 1,
-          color: "#93CE07",
-        },
-        {
-          gt: 1,
-          lte: 2,
-          color: "#FBDB0F",
-        },
-        {
-          gt: 2,
-          lte: 3,
-          color: "#FC7D02",
-        },
-        {
-          gt: 3,
-          lte: 4,
-          color: "#FD0100",
-        },
-        {
-          gt: -2,
-          lte: -1,
-          color: "#FBDB0F",
-        },
-        {
-          gt: -3,
-          lte: -2,
-          color: "#FC7D02",
-        },
-        {
-          gt: -4,
-          lte: -3,
-          color: "#FD0100",
-        },
-      ],
-      outOfRange: {
-        color: "#999",
-      },
-    };
-  else delete options.visualMap;
   return options;
 };

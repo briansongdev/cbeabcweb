@@ -16,7 +16,6 @@ import {
   VStack,
   Heading,
   Spacer,
-  Select,
   Input,
   InputGroup,
   InputLeftElement,
@@ -30,7 +29,10 @@ import {
   Center,
   useToast,
   Fade,
+  useNumberInput,
+  Select,
 } from "@chakra-ui/react";
+import Creatable, { useCreatable } from "react-select/creatable";
 import {
   HamburgerIcon,
   CloseIcon,
@@ -72,6 +74,29 @@ const met_correspondence = [
   },
 ];
 
+const met_auto = [
+  {
+    label: "Sleeping (0.8)",
+    value: 0.8,
+  },
+  {
+    label: "Sitting Quietly (1)",
+    value: 1,
+  },
+  {
+    label: "Standing Quietly (1.2)",
+    value: 1.2,
+  },
+  {
+    label: "Walking at 3.2 km/h (2)",
+    value: 2,
+  },
+  {
+    label: "Walking at 4.3 km/h (2.6)",
+    value: 2.6,
+  },
+];
+
 const clo_correspondence = [
   {
     name: "Nude",
@@ -94,14 +119,15 @@ const clo_correspondence = [
 export default function WithSubnavigation() {
   const { isOpen, onToggle } = useDisclosure();
   const [params, setParams] = useState({
-    exposure_duration: -1,
-    air_temperature: -1,
-    radiant_temperature: -1,
-    air_speed: -1,
-    relative_humidity: -1,
+    exposure_duration: 60,
+    air_temperature: 25,
+    radiant_temperature: 25,
+    air_speed: 0.1,
+    relative_humidity: 50,
   });
-  const [metValue, setMetValue] = useState("-1");
-  const [cloValue, setCloValue] = useState("-1");
+  const [metValue, setMetValue] = useState(-1);
+  const [metOptions, setMetOptions] = useState(met_auto);
+  const [cloValue, setCloValue] = useState("1");
   const [showRange, setShowRange] = useState(false);
   const [graphOptions, setGraph] = useState();
   const [graphData, setData] = useState([]);
@@ -118,6 +144,7 @@ export default function WithSubnavigation() {
       unit: "min",
       val: "exposure_duration",
       key: "expd",
+      step: 1,
     },
     {
       title: "Ambient temperature",
@@ -125,6 +152,7 @@ export default function WithSubnavigation() {
       unit: "°C",
       val: "air_temperature",
       key: "ambt",
+      step: 1,
     },
     {
       title: "Mean radiant temperature",
@@ -132,6 +160,7 @@ export default function WithSubnavigation() {
       unit: "°C",
       val: "radiant_temperature",
       key: "radt",
+      step: 1,
     },
     {
       title: "Air speed",
@@ -139,6 +168,7 @@ export default function WithSubnavigation() {
       unit: "m/s",
       val: "air_speed",
       key: "airsp",
+      step: 1,
     },
     {
       title: "Relative humidity",
@@ -146,35 +176,53 @@ export default function WithSubnavigation() {
       unit: "%",
       val: "relative_humidity",
       key: "relhum",
+      step: 1,
     },
   ];
 
-  const OptionRenderer = ({ title, icon, unit, val, key }) => {
+  const OptionRenderer = ({ title, icon, unit, val, key, step }) => {
     return (
       <div key={key}>
         <Text fontWeight="black" mb="10px">
           {title}
         </Text>
         <HStack>
-          <InputGroup w="15vw">
+          <VStack spacing={1}>
+            <Button
+              backgroundColor="#007AFF"
+              textColor="white"
+              size="xs"
+              onClick={() =>
+                setParams((params) => ({
+                  ...params,
+                  [val]: params[val] + step,
+                }))
+              }
+            >
+              +
+            </Button>
+            <Button
+              backgroundColor="yellow.400"
+              textColor="white"
+              size="xs"
+              onClick={() =>
+                setParams((params) => ({
+                  ...params,
+                  [val]: params[val] - step,
+                }))
+              }
+            >
+              -
+            </Button>
+          </VStack>
+          <InputGroup w="10vw">
             <InputLeftElement>{icon}</InputLeftElement>
             <Input
               backgroundColor="white"
               type="number"
-              value={params.val == -1 ? "" : params.val}
+              textAlign="right"
+              value={params[val]}
               onChange={(e) => {
-                if (
-                  e.target.value != "" &&
-                  val == "relative_humidity" &&
-                  e.target.value <= 0
-                )
-                  e.target.value = 0;
-                if (
-                  e.target.value != "" &&
-                  val == "relative_humidity" &&
-                  e.target.value >= 100
-                )
-                  e.target.value = 100;
                 setParams((params) => ({
                   ...params,
                   [val]: parseInt(e.target.value),
@@ -303,252 +351,248 @@ export default function WithSubnavigation() {
             backgroundColor="gray.100"
             borderRadius="10px"
             padding={5}
-            spacing={3}
+            spacing={1}
             alignItems="flex-start"
           >
-            {!graphOptions || graphData.length == 0 ? (
-              <>
-                <Flex w="100%">
-                  <Text fontSize="2xl" fontWeight="600">
-                    Condition #1
-                  </Text>
-                  <Spacer />
-                  <Button
-                    backgroundColor="gray.300"
-                    leftIcon={<AddIcon />}
-                    onMouseEnter={() => {
-                      toast.closeAll();
-                      toast({
-                        title: "To be implemented soon!",
-                        status: "warning",
-                        duration: 2000,
-                        isClosable: true,
-                        position: "top",
-                      });
-                    }}
-                  >
-                    Add Condition
-                  </Button>
-                </Flex>
-                <HStack w="100%" alignItems="flex-start">
-                  <VStack w="50%" alignItems="flex-start">
-                    {displayOptions.map((option) => {
-                      return OptionRenderer({
-                        title: option.title,
-                        icon: option.icon,
-                        unit: option.unit,
-                        val: option.val,
-                        key: option.key,
-                        comp: option.comp,
-                      });
-                    })}
-                  </VStack>
-                  <VStack pl={5} w="50%" alignItems="flex-start">
-                    <Text fontWeight="black">Metabolic rate</Text>
-                    <RadioGroup
-                      defaultChecked={false}
-                      onChange={setMetValue}
-                      value={metValue}
-                    >
-                      <Stack direction="column">
-                        {met_correspondence.map((met, index) => {
-                          return (
-                            <Radio
-                              key={met.met}
-                              size="md"
-                              value={index.toString()}
-                              backgroundColor="white"
-                            >
-                              {met.action} ({met.met} met)
-                            </Radio>
-                          );
-                        })}
-                      </Stack>
-                    </RadioGroup>
-                    <Text fontWeight="black">Clothing level</Text>
-                    <RadioGroup
-                      defaultChecked={false}
-                      onChange={setCloValue}
-                      value={cloValue}
-                    >
-                      <Stack direction="column">
-                        {clo_correspondence.map((clo, index) => {
-                          return (
-                            <div key={clo.clo}>
-                              <Radio
-                                size="md"
-                                value={index.toString()}
-                                backgroundColor="white"
-                              >
-                                {clo.name} ({clo.clo} clo)
-                              </Radio>
-                              <Text fontSize="13px" color="gray.600">
-                                {clo.description}
-                              </Text>
-                            </div>
-                          );
-                        })}
-                      </Stack>
-                    </RadioGroup>
-                  </VStack>
-                </HStack>
-                <HStack alignItems="center" alignSelf="center">
-                  <Text fontWeight="600">Color-code ranges on graph</Text>
-                  <Switch
-                    size="lg"
-                    isChecked={showRange}
-                    onMouseEnter={() => {
-                      toast.closeAll();
-                      toast({
-                        title:
-                          "To be implemented soon! (comfort and sensation have different ranges for normality)",
-                        status: "warning",
-                        duration: 3500,
-                        isClosable: true,
-                        position: "top",
-                      });
-                    }}
-                  />
-                </HStack>
-                <div
-                  style={{ alignSelf: "center" }}
+            <>
+              <Flex w="100%">
+                <Text fontSize="2xl" fontWeight="600">
+                  Condition #1
+                </Text>
+                <Spacer />
+                <Button
+                  backgroundColor="gray.300"
+                  leftIcon={<AddIcon />}
                   onMouseEnter={() => {
-                    if (
-                      Object.values(params).some((x) => x == -1) ||
-                      metValue == "-1" ||
-                      cloValue == "-1"
-                    )
-                      toast({
-                        title: "Please fill out all fields first.",
-                        status: "warning",
-                        duration: 2000,
-                        isClosable: true,
-                      });
+                    toast.closeAll();
+                    toast({
+                      title: "To be implemented soon!",
+                      status: "warning",
+                      duration: 2000,
+                      isClosable: true,
+                      position: "top",
+                    });
                   }}
                 >
-                  <Button
-                    mt="7px"
-                    colorScheme="yellow"
-                    textColor="#007AFF"
-                    alignSelf="center"
-                    onClick={async () => {
-                      loadingModal.onOpen();
-                      try {
-                        const metrics = await axios
-                          .post("/api/process", {
-                            exposure_duration: params.exposure_duration,
-                            met_activity_name:
-                              met_correspondence[parseInt(metValue)].action,
-                            met_activity_value:
-                              met_correspondence[parseInt(metValue)].met,
-                            relative_humidity: params.relative_humidity,
-                            air_speed: params.air_speed,
-                            air_temperature: params.air_temperature,
-                            radiant_temperature: params.radiant_temperature,
-                            clo_ensemble_name:
-                              clo_correspondence[parseInt(cloValue)].name,
-                          })
-                          .then((res) => {
-                            setData(res.data);
-                            setGraph(
-                              graphBuilderOptions({
-                                title: "Comfort and Sensation vs. Time",
-                                data: res.data,
-                                showRange: showRange,
-                                legends: ["Comfort", "Sensation"],
-                              })
-                            );
-                            loadingModal.onClose();
-                          });
-                      } catch (err) {
-                        loadingModal.onClose();
-                        alert("An error has occurred. Please try again.");
-                        console.log(err);
+                  Add Condition
+                </Button>
+              </Flex>
+              <HStack w="100%" alignItems="flex-start">
+                <VStack w="40%" alignItems="flex-start">
+                  {displayOptions.map((option) => {
+                    return OptionRenderer({
+                      title: option.title,
+                      icon: option.icon,
+                      unit: option.unit,
+                      val: option.val,
+                      key: option.key,
+                      comp: option.comp,
+                      step: option.step,
+                    });
+                  })}
+                </VStack>
+                <VStack pl={5} w="60%" alignItems="flex-start">
+                  <Text fontWeight="black">Metabolic rate</Text>
+                  <Creatable
+                    styles={{
+                      control: (baseStyles, state) => ({
+                        ...baseStyles,
+                        width: "20vw",
+                      }),
+                    }}
+                    placeholder="Input numeric value (mets)"
+                    isClearable
+                    onChange={(val) => {
+                      setMetValue(val ? val.value : -1);
+                    }}
+                    onCreateOption={(inputValue) => {
+                      if (isNaN(inputValue))
+                        alert("Only enter numeric values.");
+                      else {
+                        const val = parseInt(inputValue);
+                        setMetValue(val ? val : -1);
+                        setMetOptions((prev) => [
+                          ...prev,
+                          {
+                            label: val,
+                            value: val,
+                          },
+                        ]);
                       }
                     }}
-                    isDisabled={
-                      Object.values(params).some((x) => x == -1) ||
-                      metValue == "-1" ||
-                      cloValue == "-1"
-                    }
+                    options={metOptions}
+                  />
+                  <Text>Met: {metValue}</Text>
+                  <Text color="gray.600">
+                    A <span style={{ fontWeight: "bold" }}>met</span> is a
+                    relative measure of the metabolic rate of activity over
+                    rest. Higher levels indicate more strenuous activity, and
+                    vice versa.
+                  </Text>
+                  <Text fontWeight="black">Clothing level</Text>
+                  <Select
+                    backgroundColor="white"
+                    onChange={(e) => setCloValue(e.target.value)}
+                    value={cloValue}
                   >
-                    Simulate
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <VStack alignSelf="center">
-                <Text fontWeight="black">
-                  After {graphData.length} minutes...
-                </Text>
-                <Text fontWeight="600">
-                  Average comfort:{" "}
-                  {(
-                    graphData.reduce((r, c) => r + c.comfort, 0) /
-                    graphData.length
-                  ).toPrecision(3)}
-                </Text>
-                <Text fontWeight="600">
-                  Average sensation:{" "}
-                  {(
-                    graphData.reduce((r, c) => r + c.sensation, 0) /
-                    graphData.length
-                  ).toPrecision(3)}
-                </Text>
-                <Text>
-                  Starting comfort: {graphData[0].comfort.toPrecision(3)} |
-                  Final comfort:{" "}
-                  {graphData[graphData.length - 1].comfort.toPrecision(3)}
-                </Text>
-                <Text>
-                  ∆ comfort:{" "}
-                  {(
-                    graphData[graphData.length - 1].comfort -
-                    graphData[0].comfort
-                  ).toPrecision(3)}
-                </Text>
-                <Text>
-                  Starting sensation: {graphData[0].sensation.toPrecision(3)} |
-                  Final sensation:{" "}
-                  {graphData[graphData.length - 1].sensation.toPrecision(3)}
-                </Text>
-                <Text>
-                  ∆ sensation:{" "}
-                  {(
-                    graphData[graphData.length - 1].sensation -
-                    graphData[0].sensation
-                  ).toPrecision(3)}
-                </Text>
-                <Button
-                  colorScheme="blue"
-                  textColor="yellow.300"
-                  mt="10px"
-                  onClick={() => {
-                    setGraph();
-                    setData([]);
-                    setParams({
-                      exposure_duration: -1,
-                      air_temperature: -1,
-                      radiant_temperature: -1,
-                      air_speed: -1,
-                      relative_humidity: -1,
+                    {clo_correspondence.map((clo, index) => {
+                      return (
+                        <option
+                          size="md"
+                          key={clo.clo}
+                          value={index.toString()}
+                          backgroundColor="white"
+                        >
+                          {clo.name}
+                        </option>
+                      );
+                    })}
+                  </Select>
+                  <Text color="gray.600">
+                    {clo_correspondence[cloValue].clo} clo
+                  </Text>
+                  <Text fontSize="13px" color="gray.600">
+                    {clo_correspondence[cloValue].description}
+                  </Text>
+                  <Text color="gray.600">
+                    A <span style={{ fontWeight: "bold" }}>clo</span> is a
+                    relative measure of clothing insulation. Higher levels
+                    indicate more thermal insulation, and vice versa.
+                  </Text>
+                </VStack>
+              </HStack>
+              <div
+                style={{ alignSelf: "center" }}
+                onMouseEnter={() => {
+                  if (
+                    Object.values(params).some((x) => x == -1) ||
+                    metValue == -1 ||
+                    cloValue == "-1"
+                  )
+                    toast({
+                      title: "Please fill out all fields first.",
+                      status: "warning",
+                      duration: 2000,
+                      isClosable: true,
                     });
-                    setMetValue("-1");
-                    setCloValue("-1");
+                }}
+              >
+                <Button
+                  mt="7px"
+                  colorScheme="yellow"
+                  textColor="#007AFF"
+                  alignSelf="center"
+                  onClick={async () => {
+                    loadingModal.onOpen();
+                    try {
+                      const metrics = await axios
+                        .post("/api/process", {
+                          exposure_duration: params.exposure_duration,
+                          met_activity_name: "Custom-defined Met Activity",
+                          met_activity_value:
+                            met_correspondence[parseInt(metValue)].met,
+                          relative_humidity: params.relative_humidity,
+                          air_speed: params.air_speed,
+                          air_temperature: params.air_temperature,
+                          radiant_temperature: params.radiant_temperature,
+                          clo_ensemble_name:
+                            clo_correspondence[parseInt(cloValue)].name,
+                        })
+                        .then((res) => {
+                          setData(res.data);
+                          setGraph(
+                            graphBuilderOptions({
+                              title:
+                                "Comfort and Sensation vs. Time (click above to turn on/off, scroll to zoom)",
+                              data: res.data,
+                              showRange: showRange,
+                              legends: ["Comfort", "Sensation"],
+                            })
+                          );
+                          loadingModal.onClose();
+                        });
+                    } catch (err) {
+                      loadingModal.onClose();
+                      alert("An error has occurred. Please try again.");
+                      console.log(err);
+                    }
                   }}
+                  isDisabled={
+                    Object.values(params).some((x) => x == -1) ||
+                    metValue == "-1" ||
+                    cloValue == "-1" ||
+                    params.relative_humidity > 100 ||
+                    params.relative_humidity < 0
+                  }
                 >
-                  Simulate again
+                  Simulate
                 </Button>
-              </VStack>
-            )}
+              </div>
+            </>
           </VStack>
           <VStack w="60%">
             {graphOptions ? (
-              <Box width="100%" height="40vh">
-                <ReactECharts notMerge={true} option={graphOptions} />
-              </Box>
+              <>
+                <VStack
+                  alignSelf="center"
+                  backgroundColor="gray.200"
+                  padding={5}
+                  spacing={8}
+                  w="100%"
+                  borderRadius="10px"
+                >
+                  <Box width="100%" height="40vh">
+                    <ReactECharts notMerge={true} option={graphOptions} />
+                  </Box>
+                  <VStack>
+                    <Text fontWeight="black">
+                      After {graphData.length} minutes...
+                    </Text>
+                    <Text fontWeight="600">
+                      Average comfort:{" "}
+                      {(
+                        graphData.reduce((r, c) => r + c.comfort, 0) /
+                        graphData.length
+                      ).toPrecision(3)}
+                    </Text>
+                    <Text fontWeight="600">
+                      Average sensation:{" "}
+                      {(
+                        graphData.reduce((r, c) => r + c.sensation, 0) /
+                        graphData.length
+                      ).toPrecision(3)}
+                    </Text>
+                    <Text>
+                      Starting comfort: {graphData[0].comfort.toPrecision(3)} |
+                      Final comfort:{" "}
+                      {graphData[graphData.length - 1].comfort.toPrecision(3)}
+                    </Text>
+                    <Text>
+                      ∆ comfort:{" "}
+                      {(
+                        graphData[graphData.length - 1].comfort -
+                        graphData[0].comfort
+                      ).toPrecision(3)}
+                    </Text>
+                    <Text>
+                      Starting sensation:{" "}
+                      {graphData[0].sensation.toPrecision(3)} | Final sensation:{" "}
+                      {graphData[graphData.length - 1].sensation.toPrecision(3)}
+                    </Text>
+                    <Text>
+                      ∆ sensation:{" "}
+                      {(
+                        graphData[graphData.length - 1].sensation -
+                        graphData[0].sensation
+                      ).toPrecision(3)}
+                    </Text>
+                  </VStack>
+                </VStack>
+              </>
             ) : (
-              <Text>No data inputted yet. Please input and hit Simulate.</Text>
+              <Text>
+                No simulation run yet. Please input data and hit Simulate.
+              </Text>
             )}
           </VStack>
         </HStack>
