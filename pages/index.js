@@ -406,23 +406,19 @@ export default function WithSubnavigation() {
                       setMetValue(val ? val.value : -1);
                     }}
                     onCreateOption={(inputValue) => {
-                      if (isNaN(inputValue))
-                        alert("Only enter numeric values.");
-                      else {
-                        const val = parseInt(inputValue);
-                        setMetValue(val ? val : -1);
-                        setMetOptions((prev) => [
-                          ...prev,
-                          {
-                            label: val,
-                            value: val,
-                          },
-                        ]);
-                      }
+                      const val = parseFloat(inputValue);
+                      setMetValue(val ? val : -1);
+                      setMetOptions((prev) => [
+                        ...prev,
+                        {
+                          label: val,
+                          value: val,
+                        },
+                      ]);
                     }}
                     options={metOptions}
                   />
-                  <Text>Met: {metValue}</Text>
+                  {metValue != -1 ? <Text>Met: {metValue}</Text> : <></>}
                   <Text color="gray.600">
                     A <span style={{ fontWeight: "bold" }}>met</span> is a
                     relative measure of the metabolic rate of activity over
