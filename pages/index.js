@@ -485,8 +485,7 @@ export default function WithSubnavigation() {
                         .post("/api/process", {
                           exposure_duration: params.exposure_duration,
                           met_activity_name: "Custom-defined Met Activity",
-                          met_activity_value:
-                            met_correspondence[parseInt(metValue)].met,
+                          met_activity_value: parseFloat(metValue),
                           relative_humidity: params.relative_humidity,
                           air_speed: params.air_speed,
                           air_temperature: params.air_temperature,
@@ -515,7 +514,7 @@ export default function WithSubnavigation() {
                   }}
                   isDisabled={
                     Object.values(params).some((x) => x == -1) ||
-                    metValue == "-1" ||
+                    metValue == -1 ||
                     cloValue == "-1" ||
                     params.relative_humidity > 100 ||
                     params.relative_humidity < 0
