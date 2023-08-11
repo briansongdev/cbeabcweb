@@ -1,0 +1,17 @@
+﻿body segment,height (standing),fractional height,height (sitting),fractional height
+Head,170,1.00,130,1.00
+Chest,140,0.82,100,0.77
+Back,140,0.82,100,0.77
+Pelvis,110,0.65,85,0.65
+Left Upper Arm,140,0.82,100,0.77
+Right Upper Arm,140,0.82,100,0.77
+Left Lower Arm,110,0.65,85,0.65
+Right Lower Arm,110,0.65,85,0.65
+Left Hand,80,0.47,70,0.54
+Right Hand,80,0.47,70,0.54
+Left Thigh,80,0.47,70,0.54
+Right Thigh,80,0.47,70,0.54
+Left Lower Leg,40,0.24,30,0.23
+Right Lower Leg,40,0.24,30,0.23
+Left Foot,0,0.00,0,0.00
+Right Foot,0,0.00,0,0.00
