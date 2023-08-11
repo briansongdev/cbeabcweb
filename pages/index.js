@@ -31,8 +31,14 @@ import {
   Fade,
   useNumberInput,
   Select,
+  InputLeftAddon,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
 } from "@chakra-ui/react";
-import Creatable, { useCreatable } from "react-select/creatable";
+import Creatable from "react-select/creatable";
 import {
   HamburgerIcon,
   CloseIcon,
@@ -50,29 +56,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import ReactECharts from "echarts-for-react";
 import { graphBuilderOptions } from "../components/graphbuilder";
-
-const met_correspondence = [
-  {
-    action: "Sleeping",
-    met: 0.8,
-  },
-  {
-    action: "Sitting Quietly",
-    met: 1,
-  },
-  {
-    action: "Standing Quietly",
-    met: 1.2,
-  },
-  {
-    action: "Walking at 3.2 km/h",
-    met: 2,
-  },
-  {
-    action: "Walking at 4.3 km/h",
-    met: 2.6,
-  },
-];
 
 const met_auto = [
   {
@@ -118,24 +101,26 @@ const clo_correspondence = [
 
 export default function WithSubnavigation() {
   const { isOpen, onToggle } = useDisclosure();
-  const [params, setParams] = useState({
-    exposure_duration: 60,
-    air_temperature: 25,
-    radiant_temperature: 25,
-    air_speed: 0.1,
-    relative_humidity: 50,
-  });
-  const [metValue, setMetValue] = useState(-1);
+  const [params, setParams] = useState([
+    {
+      exposure_duration: 60,
+      air_temperature: 25,
+      radiant_temperature: 25,
+      air_speed: 0.1,
+      relative_humidity: 50,
+      met_value: 1,
+      clo_value: "1",
+    },
+  ]);
+  const [ind, setIndex] = useState(0);
   const [metOptions, setMetOptions] = useState(met_auto);
-  const [cloValue, setCloValue] = useState("1");
-  const [showRange, setShowRange] = useState(false);
   const [graphOptions, setGraph] = useState();
   const [graphData, setData] = useState([]);
   const loadingModal = useDisclosure();
 
   const toast = useToast();
 
-  useEffect(() => {}, [graphOptions]);
+  useEffect(() => {}, [graphOptions, ind]);
 
   const displayOptions = [
     {
@@ -145,6 +130,7 @@ export default function WithSubnavigation() {
       val: "exposure_duration",
       key: "expd",
       step: 1,
+      precision: 0,
     },
     {
       title: "Ambient temperature",
@@ -152,7 +138,8 @@ export default function WithSubnavigation() {
       unit: "°C",
       val: "air_temperature",
       key: "ambt",
-      step: 1,
+      step: 0.1,
+      precision: 1,
     },
     {
       title: "Mean radiant temperature",
@@ -160,7 +147,8 @@ export default function WithSubnavigation() {
       unit: "°C",
       val: "radiant_temperature",
       key: "radt",
-      step: 1,
+      step: 0.1,
+      precision: 1,
     },
     {
       title: "Air speed",
@@ -168,7 +156,8 @@ export default function WithSubnavigation() {
       unit: "m/s",
       val: "air_speed",
       key: "airsp",
-      step: 1,
+      step: 0.1,
+      precision: 1,
     },
     {
       title: "Relative humidity",
@@ -177,58 +166,42 @@ export default function WithSubnavigation() {
       val: "relative_humidity",
       key: "relhum",
       step: 1,
+      precision: 0,
     },
   ];
 
-  const OptionRenderer = ({ title, icon, unit, val, key, step }) => {
+  const OptionRenderer = ({ title, icon, unit, val, key, step, precision }) => {
     return (
       <div key={key}>
         <Text fontWeight="black" mb="10px">
           {title}
         </Text>
         <HStack>
-          <VStack spacing={1}>
-            <Button
-              backgroundColor="#007AFF"
-              textColor="white"
-              size="xs"
-              onClick={() =>
-                setParams((params) => ({
-                  ...params,
-                  [val]: params[val] + step,
-                }))
-              }
-            >
-              +
-            </Button>
-            <Button
-              backgroundColor="yellow.400"
-              textColor="white"
-              size="xs"
-              onClick={() =>
-                setParams((params) => ({
-                  ...params,
-                  [val]: params[val] - step,
-                }))
-              }
-            >
-              -
-            </Button>
-          </VStack>
           <InputGroup w="10vw">
-            <InputLeftElement>{icon}</InputLeftElement>
-            <Input
+            <InputLeftAddon backgroundColor="white">{icon}</InputLeftAddon>
+            <NumberInput
+              w="100%"
+              allowMouseWheel
               backgroundColor="white"
               type="number"
               textAlign="right"
-              value={params[val]}
+              value={params[ind][val]}
               onChange={(e) => {
-                setParams((params) => ({
-                  ...params,
-                  [val]: parseInt(e.target.value),
-                }));
+                let newState = [...params];
+                newState[ind][val] = parseFloat(e);
+                setParams(newState);
               }}
-            />
+              min={0}
+              max={100}
+              precision={precision}
+              step={step}
+            >
+              <NumberInputField borderLeftRadius={0} />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
           </InputGroup>
           <Text>{unit}</Text>
         </HStack>
@@ -345,186 +318,239 @@ export default function WithSubnavigation() {
         style={{ width: "100%" }}
         transition={{ enter: { duration: 0.5 } }}
       >
-        <HStack margin="20px" alignItems="flex-start">
-          <VStack
-            w="40%"
-            backgroundColor="gray.100"
-            borderRadius="10px"
-            padding={5}
-            spacing={1}
-            alignItems="flex-start"
-          >
-            <>
-              <Flex w="100%">
-                <Text fontSize="2xl" fontWeight="600">
-                  Condition #1
-                </Text>
-                <Spacer />
-                <Button
-                  backgroundColor="gray.300"
-                  leftIcon={<AddIcon />}
-                  onMouseEnter={() => {
-                    toast.closeAll();
-                    toast({
-                      title: "To be implemented soon!",
-                      status: "warning",
-                      duration: 2000,
-                      isClosable: true,
-                      position: "top",
-                    });
-                  }}
-                >
-                  Add Condition
-                </Button>
-              </Flex>
-              <HStack w="100%" alignItems="flex-start">
-                <VStack w="40%" alignItems="flex-start">
-                  {displayOptions.map((option) => {
-                    return OptionRenderer({
-                      title: option.title,
-                      icon: option.icon,
-                      unit: option.unit,
-                      val: option.val,
-                      key: option.key,
-                      comp: option.comp,
-                      step: option.step,
-                    });
-                  })}
-                </VStack>
-                <VStack pl={5} w="60%" alignItems="flex-start">
-                  <Text fontWeight="black">Metabolic rate</Text>
-                  <Creatable
-                    styles={{
-                      control: (baseStyles, state) => ({
-                        ...baseStyles,
-                        width: "20vw",
-                      }),
-                    }}
-                    placeholder="Input numeric value (mets)"
-                    isClearable
-                    onChange={(val) => {
-                      setMetValue(val ? val.value : -1);
-                    }}
-                    onCreateOption={(inputValue) => {
-                      const val = parseFloat(inputValue);
-                      setMetValue(val ? val : -1);
-                      setMetOptions((prev) => [
-                        ...prev,
-                        {
-                          label: val,
-                          value: val,
-                        },
-                      ]);
-                    }}
-                    options={metOptions}
-                  />
-                  {metValue != -1 ? <Text>Met: {metValue}</Text> : <></>}
-                  <Text color="gray.600">
-                    A <span style={{ fontWeight: "bold" }}>met</span> is a
-                    relative measure of the metabolic rate of activity over
-                    rest. Higher levels indicate more strenuous activity, and
-                    vice versa.
-                  </Text>
-                  <Text fontWeight="black">Clothing level</Text>
-                  <Select
-                    backgroundColor="white"
-                    onChange={(e) => setCloValue(e.target.value)}
-                    value={cloValue}
-                  >
-                    {clo_correspondence.map((clo, index) => {
-                      return (
-                        <option
-                          size="md"
-                          key={clo.clo}
-                          value={index.toString()}
-                          backgroundColor="white"
-                        >
-                          {clo.name}
-                        </option>
-                      );
-                    })}
-                  </Select>
-                  <Text color="gray.600">
-                    {clo_correspondence[cloValue].clo} clo
-                  </Text>
-                  <Text fontSize="13px" color="gray.600">
-                    {clo_correspondence[cloValue].description}
-                  </Text>
-                  <Text color="gray.600">
-                    A <span style={{ fontWeight: "bold" }}>clo</span> is a
-                    relative measure of clothing insulation. Higher levels
-                    indicate more thermal insulation, and vice versa.
-                  </Text>
-                </VStack>
+        <HStack margin="20px" alignItems="flex-start" spacing={5}>
+          <VStack w="40%">
+            <HStack w="100%" padding={2} alignItems="flex-start">
+              <HStack w="80%" overflowY={"scroll"} spacing={3}>
+                {params.map((elem, indx) => {
+                  return (
+                    <Button
+                      key={indx}
+                      minW="110px"
+                      colorScheme={ind == indx ? "yellow" : "gray"}
+                      isDisabled={ind == indx}
+                      textColor={ind == indx ? "#007AFF" : "black"}
+                      onClick={() => {
+                        setIndex(indx);
+                      }}
+                    >
+                      Condition {indx + 1}
+                    </Button>
+                  );
+                })}
               </HStack>
-              <div
-                style={{ alignSelf: "center" }}
-                onMouseEnter={() => {
-                  if (
-                    Object.values(params).some((x) => x == -1) ||
-                    metValue == -1 ||
-                    cloValue == "-1"
-                  )
-                    toast({
-                      title: "Please fill out all fields first.",
-                      status: "warning",
-                      duration: 2000,
-                      isClosable: true,
-                    });
+              <Button
+                w="20%"
+                backgroundColor="gray.300"
+                leftIcon={<AddIcon />}
+                onClick={() => {
+                  params.push({
+                    exposure_duration: 60,
+                    air_temperature: 25,
+                    radiant_temperature: 25,
+                    air_speed: 0.1,
+                    relative_humidity: 50,
+                    met_value: 1,
+                    clo_value: "1",
+                  });
+                  setIndex(ind + 1);
                 }}
               >
-                <Button
-                  mt="7px"
-                  colorScheme="yellow"
-                  textColor="#007AFF"
-                  alignSelf="center"
-                  onClick={async () => {
-                    loadingModal.onOpen();
-                    try {
-                      const metrics = await axios
-                        .post("/api/process", {
-                          exposure_duration: params.exposure_duration,
-                          met_activity_name: "Custom-defined Met Activity",
-                          met_activity_value: parseFloat(metValue),
-                          relative_humidity: params.relative_humidity,
-                          air_speed: params.air_speed,
-                          air_temperature: params.air_temperature,
-                          radiant_temperature: params.radiant_temperature,
-                          clo_ensemble_name:
-                            clo_correspondence[parseInt(cloValue)].name,
-                        })
-                        .then((res) => {
-                          setData(res.data);
-                          setGraph(
-                            graphBuilderOptions({
-                              title:
-                                "Comfort and Sensation vs. Time (click above to turn on/off, scroll to zoom)",
-                              data: res.data,
-                              showRange: showRange,
-                              legends: ["Comfort", "Sensation"],
-                            })
-                          );
-                          loadingModal.onClose();
-                        });
-                    } catch (err) {
-                      loadingModal.onClose();
-                      alert("An error has occurred. Please try again.");
-                      console.log(err);
-                    }
-                  }}
-                  isDisabled={
-                    Object.values(params).some((x) => x == -1) ||
-                    metValue == -1 ||
-                    cloValue == "-1" ||
-                    params.relative_humidity > 100 ||
-                    params.relative_humidity < 0
+                Add
+              </Button>
+            </HStack>
+            <VStack
+              w="100%"
+              backgroundColor="gray.100"
+              borderRadius="10px"
+              padding={5}
+              spacing={1}
+              alignItems="flex-start"
+            >
+              <>
+                <Flex w="100%">
+                  <Text fontSize="2xl" fontWeight="600">
+                    Condition #{ind + 1}
+                  </Text>
+                  <Spacer />
+                  <Button
+                    w="20%"
+                    colorScheme="red"
+                    leftIcon={<CloseIcon />}
+                    isDisabled={params.length == 1}
+                    onClick={() => {
+                      let tempParams = [...params];
+                      tempParams.splice(ind, 1);
+                      setParams(tempParams);
+                      setIndex(Math.max(0, ind - 1));
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </Flex>
+                <HStack w="100%" alignItems="flex-start">
+                  <VStack w="40%" alignItems="flex-start">
+                    {displayOptions.map((option) => {
+                      return OptionRenderer({
+                        title: option.title,
+                        icon: option.icon,
+                        unit: option.unit,
+                        val: option.val,
+                        key: option.key,
+                        comp: option.comp,
+                        step: option.step,
+                      });
+                    })}
+                  </VStack>
+                  <VStack pl={5} w="60%" alignItems="flex-start">
+                    <Text fontWeight="black">Metabolic rate</Text>
+                    <Creatable
+                      instanceId="zjhddjh1oi2euiAUSD901280198"
+                      styles={{
+                        control: (baseStyles, state) => ({
+                          ...baseStyles,
+                          width: "20vw",
+                        }),
+                      }}
+                      placeholder="Input numeric value (mets)"
+                      isClearable
+                      onChange={(val) => {
+                        let newState = [...params];
+                        if (val) newState[ind].met_value = val.value;
+                        else newState[ind].met_value = -1;
+                        setParams(newState);
+                      }}
+                      onCreateOption={(inputValue) => {
+                        const val = parseFloat(inputValue);
+                        let newState = [...params];
+                        newState[ind].met_value = val.value;
+                        setParams(newState);
+                        setMetOptions((prev) => [
+                          ...prev,
+                          {
+                            label: val,
+                            value: val,
+                          },
+                        ]);
+                      }}
+                      defaultValue={metOptions[1]}
+                      options={metOptions}
+                    />
+                    {params[ind].met_value != -1 ? (
+                      <Text>Met: {params[ind].met_value}</Text>
+                    ) : (
+                      <></>
+                    )}
+                    <Text color="gray.600">
+                      A <span style={{ fontWeight: "bold" }}>met</span> is a
+                      relative measure of the metabolic rate of activity over
+                      rest. Higher levels indicate more strenuous activity, and
+                      vice versa.
+                    </Text>
+                    <Text fontWeight="black">Clothing level</Text>
+                    <Select
+                      backgroundColor="white"
+                      onChange={(e) => {
+                        let newState = [...params];
+                        newState[ind].clo_value = e.target.value.toString();
+                        setParams(newState);
+                      }}
+                      value={params[ind].clo_value}
+                    >
+                      {clo_correspondence.map((clo, index) => {
+                        return (
+                          <option
+                            size="md"
+                            key={clo.clo}
+                            value={index.toString()}
+                            style={{ backgroundColor: "white" }}
+                          >
+                            {clo.name}
+                          </option>
+                        );
+                      })}
+                    </Select>
+                    <Text color="gray.600">
+                      {clo_correspondence[params[ind].clo_value].clo} clo -{" "}
+                      <span style={{ fontSize: "13px", color: "gray.600" }}>
+                        {clo_correspondence[params[ind].clo_value].description}
+                      </span>
+                    </Text>
+
+                    <Text color="gray.600">
+                      A <span style={{ fontWeight: "bold" }}>clo</span> is a
+                      relative measure of clothing insulation. Higher levels
+                      indicate more thermal insulation, and vice versa.
+                    </Text>
+                  </VStack>
+                </HStack>
+              </>
+            </VStack>
+            <div
+              style={{ alignSelf: "center" }}
+              onMouseEnter={() => {
+                if (Object.values(params).some((x) => x == -1 || x == "-1"))
+                  toast({
+                    title: "Please fill out all fields first.",
+                    status: "warning",
+                    duration: 2000,
+                    isClosable: true,
+                  });
+              }}
+            >
+              <Button
+                mt="7px"
+                colorScheme="yellow"
+                textColor="#007AFF"
+                alignSelf="center"
+                onClick={async () => {
+                  loadingModal.onOpen();
+                  try {
+                    let phases = [];
+                    for (let i = 0; i < params.length; i++)
+                      phases.push({
+                        exposure_duration: params[i].exposure_duration,
+                        met_activity_name: "Custom-defined Met Activity",
+                        met_activity_value: parseFloat(params[i].met_value),
+                        relative_humidity: params[i].relative_humidity,
+                        air_speed: params[i].air_speed,
+                        air_temperature: params[i].air_temperature,
+                        radiant_temperature: params[i].radiant_temperature,
+                        clo_ensemble_name:
+                          clo_correspondence[parseInt(params[i].clo_value)]
+                            .name,
+                      });
+                    const metrics = await axios
+                      .post("/api/process", {
+                        phases: phases,
+                      })
+                      .then((res) => {
+                        setData(res.data);
+                        setGraph(
+                          graphBuilderOptions({
+                            title:
+                              "Comfort and Sensation vs. Time (click above to turn on/off, scroll to zoom)",
+                            data: res.data,
+                            legends: ["Comfort", "Sensation"],
+                          })
+                        );
+                        loadingModal.onClose();
+                      });
+                  } catch (err) {
+                    loadingModal.onClose();
+                    alert("An error has occurred. Please try again.");
+                    console.log(err);
                   }
-                >
-                  Simulate
-                </Button>
-              </div>
-            </>
+                }}
+                isDisabled={params.some((elem) =>
+                  Object.values(elem).some((x) => x == -1 || x == "-1")
+                )}
+              >
+                Simulate
+              </Button>
+            </div>
           </VStack>
+
           <VStack w="60%">
             {graphOptions ? (
               <>
