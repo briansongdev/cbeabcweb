@@ -1,0 +1,144 @@
+{
+  "name": "WebInterface Example",
+  "description": "Hello world wide web",
+  "reference_time": "2021-02-23T09:40:16",
+  "output_freq": 60,
+  "options": {
+    "csvOutput": false,
+    "sensation_adaptation": false,
+    "sensation_coredTdt": false,
+    "ignore_segments": false,
+    "ignore_physiology": false,
+    "neutralSimulationOutput": false
+  },
+
+
+  "phases": [
+    {
+        "start_time": 0,
+        "time_units": "minutes",
+        "ramp": false,
+        "end_time": 60,
+        "met_activity_name": "Seated",
+        "met": 1,
+        "segment_data": {
+            "Head": {
+                "mrt": 25,
+                "rh": 0.4,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+            "Chest": {
+                "mrt": 25,
+                "rh": 0.4,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+            "Back": {
+                "mrt": 25,
+                "rh": 0.4,
+                "solar": 0,
+                "ta": 25,
+                "v": 0
+            },
+            "Pelvis": {
+                "mrt": 25,
+                "rh": 0.4,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+
+            "Left Upper Arm": {
+                "mrt": 25,
+                "rh": 0.4,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+            "Right Upper Arm": {
+                "mrt": 25,
+                "rh": 0.4,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+            "Left Lower Arm": {
+                "mrt": 25,
+                "rh": 0.4,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+            "Right Lower Arm": {
+                "mrt": 25,
+                "rh": 0.4,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+            "Left Hand": {
+                "mrt": 25,
+                "rh": 0.4,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+            "Right Hand": {
+                "mrt": 25,
+                "rh": 0.4,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+            "Left Thigh": {
+                "mrt": 25,
+                "rh": 0,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+            "Right Thigh": {
+                "mrt": 25,
+                "rh": 0,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+            "Left Lower Leg": {
+                "mrt": 25,
+                "rh": 0,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+            "Right Lower Leg": {
+                "mrt": 25,
+                "rh": 0,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+            "Left Foot": {
+                "mrt": 25,
+                "rh": 0,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            },
+            "Right Foot": {
+                "mrt": 25,
+                "rh": 0,
+                "solar": 0,
+                "ta": 25,
+                "v": 0.05
+            }
+
+        },
+        "clo_ensemble_name": "Nude"
+    }
+
+  ]
+}
