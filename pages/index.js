@@ -395,7 +395,7 @@ export default function WithSubnavigation() {
               <Tooltip
                 label={
                   stratification == 0
-                    ? "Not stratified"
+                    ? "Uniform"
                     : stratification == 1
                     ? "Stratified, standing"
                     : "Stratified, seated"
