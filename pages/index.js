@@ -37,6 +37,8 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
+  Checkbox,
+  Tooltip,
 } from "@chakra-ui/react";
 import Creatable from "react-select/creatable";
 import {
@@ -56,6 +58,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import ReactECharts from "echarts-for-react";
 import { graphBuilderOptions } from "../components/graphbuilder";
+import { PiWaveform } from "react-icons/pi";
+import { TiArrowLeftOutline } from "react-icons/ti";
 
 const met_auto = [
   {
@@ -110,8 +114,15 @@ export default function WithSubnavigation() {
       relative_humidity: 50,
       met_value: 1,
       clo_value: "1",
+      ed_delta: 0,
+      at_delta: 0,
+      mr_delta: 0,
+      as_delta: 0,
+      rh_delta: 0,
     },
   ]);
+  const [stratification, changeStratified] = useState(0);
+  // 0 = no strat, 1 = standing, 2 = seated
   const [ind, setIndex] = useState(0);
   const [metOptions, setMetOptions] = useState(met_auto);
   const [graphOptions, setGraph] = useState();
@@ -131,6 +142,7 @@ export default function WithSubnavigation() {
       key: "expd",
       step: 1,
       precision: 0,
+      deltaKey: "ed_delta",
     },
     {
       title: "Ambient temperature",
@@ -140,6 +152,7 @@ export default function WithSubnavigation() {
       key: "ambt",
       step: 0.1,
       precision: 1,
+      deltaKey: "at_delta",
     },
     {
       title: "Mean radiant temperature",
@@ -149,6 +162,7 @@ export default function WithSubnavigation() {
       key: "radt",
       step: 0.1,
       precision: 1,
+      deltaKey: "mr_delta",
     },
     {
       title: "Air speed",
@@ -158,6 +172,7 @@ export default function WithSubnavigation() {
       key: "airsp",
       step: 0.1,
       precision: 1,
+      deltaKey: "as_delta",
     },
     {
       title: "Relative humidity",
@@ -167,43 +182,76 @@ export default function WithSubnavigation() {
       key: "relhum",
       step: 1,
       precision: 0,
+      deltaKey: "rh_delta",
     },
   ];
 
-  const OptionRenderer = ({ title, icon, unit, val, key, step, precision }) => {
+  const OptionRenderer = ({
+    title,
+    deltaKey,
+    unit,
+    val,
+    key,
+    step,
+    precision,
+  }) => {
     return (
       <div key={key}>
         <Text fontWeight="black" mb="10px">
           {title}
         </Text>
-        <HStack>
-          <InputGroup w="10vw">
-            <InputLeftAddon backgroundColor="white">{icon}</InputLeftAddon>
+        <HStack width="100%">
+          {/* <InputLeftAddon backgroundColor="white">{icon}</InputLeftAddon> */}
+          <NumberInput
+            w="5vw"
+            allowMouseWheel
+            backgroundColor="white"
+            type="number"
+            textAlign="right"
+            value={params[ind][val]}
+            onChange={(e) => {
+              let newState = [...params];
+              newState[ind][val] = parseFloat(e);
+              setParams(newState);
+            }}
+            min={0}
+            max={100}
+            precision={precision}
+            step={step}
+          >
+            <NumberInputField />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+          <Text>{unit}</Text>
+          <Spacer />
+          {stratification != 0 ? (
             <NumberInput
-              w="100%"
+              w="5vw"
               allowMouseWheel
               backgroundColor="white"
               type="number"
               textAlign="right"
-              value={params[ind][val]}
+              value={params[ind][deltaKey]}
               onChange={(e) => {
                 let newState = [...params];
-                newState[ind][val] = parseFloat(e);
+                newState[ind][deltaKey] = parseFloat(e);
                 setParams(newState);
               }}
-              min={0}
-              max={100}
-              precision={precision}
-              step={step}
+              precision={0}
+              step={1}
             >
-              <NumberInputField borderLeftRadius={0} />
+              <NumberInputField />
               <NumberInputStepper>
                 <NumberIncrementStepper />
                 <NumberDecrementStepper />
               </NumberInputStepper>
             </NumberInput>
-          </InputGroup>
-          <Text>{unit}</Text>
+          ) : (
+            <></>
+          )}
         </HStack>
       </div>
     );
@@ -219,7 +267,12 @@ export default function WithSubnavigation() {
         <ModalContent boxShadow="0px" bgColor="transparent">
           <ModalBody>
             <Center>
-              <Spinner size="xl" speed="0.75s" color="white" thickness="4px" />
+              <Spinner
+                size="xl"
+                speed="0.75s"
+                color="yellow.400"
+                thickness="4px"
+              />
             </Center>
           </ModalBody>
         </ModalContent>
@@ -321,17 +374,17 @@ export default function WithSubnavigation() {
         <HStack margin="20px" alignItems="flex-start" spacing={5}>
           <VStack w="40%">
             <HStack w="100%" padding={2} alignItems="flex-start">
-              <HStack w="80%" overflowY={"scroll"} spacing={3}>
+              <HStack w="90%" overflowY={"scroll"} spacing={3}>
                 {params.map((elem, indx) => {
                   return (
                     <Button
                       key={indx}
                       minW="110px"
                       colorScheme={ind == indx ? "yellow" : "gray"}
-                      isDisabled={ind == indx}
                       textColor={ind == indx ? "#007AFF" : "black"}
                       onClick={() => {
-                        setIndex(indx);
+                        if (ind == indx) return false;
+                        else setIndex(indx);
                       }}
                     >
                       Condition {indx + 1}
@@ -339,10 +392,30 @@ export default function WithSubnavigation() {
                   );
                 })}
               </HStack>
-              <Button
-                w="20%"
-                backgroundColor="gray.300"
-                leftIcon={<AddIcon />}
+              <Tooltip
+                label={
+                  stratification == 0
+                    ? "Not stratified"
+                    : stratification == 1
+                    ? "Stratified, standing"
+                    : "Stratified, seated"
+                }
+                bg="#007AFF"
+                hasArrow
+              >
+                <IconButton
+                  colorScheme="blue"
+                  icon={<PiWaveform />}
+                  onClick={() => {
+                    changeStratified((stratification + 1) % 3);
+                  }}
+                ></IconButton>
+              </Tooltip>
+              <IconButton
+                w="5%"
+                colorScheme="blue"
+                textColor="yellow.400"
+                icon={<AddIcon />}
                 onClick={() => {
                   params.push({
                     exposure_duration: 60,
@@ -352,12 +425,15 @@ export default function WithSubnavigation() {
                     relative_humidity: 50,
                     met_value: 1,
                     clo_value: "1",
+                    ed_delta: 0,
+                    at_delta: 0,
+                    mr_delta: 0,
+                    as_delta: 0,
+                    rh_delta: 0,
                   });
-                  setIndex(ind + 1);
+                  setIndex(params.length - 1);
                 }}
-              >
-                Add
-              </Button>
+              ></IconButton>
             </HStack>
             <VStack
               w="100%"
@@ -368,15 +444,15 @@ export default function WithSubnavigation() {
               alignItems="flex-start"
             >
               <>
-                <Flex w="100%">
+                <Flex w="100%" alignItems="center">
                   <Text fontSize="2xl" fontWeight="600">
                     Condition #{ind + 1}
                   </Text>
                   <Spacer />
-                  <Button
-                    w="20%"
+                  <IconButton
+                    w="5%"
                     colorScheme="red"
-                    leftIcon={<CloseIcon />}
+                    icon={<CloseIcon />}
                     isDisabled={params.length == 1}
                     onClick={() => {
                       let tempParams = [...params];
@@ -384,9 +460,7 @@ export default function WithSubnavigation() {
                       setParams(tempParams);
                       setIndex(Math.max(0, ind - 1));
                     }}
-                  >
-                    Delete
-                  </Button>
+                  ></IconButton>
                 </Flex>
                 <HStack w="100%" alignItems="flex-start">
                   <VStack w="40%" alignItems="flex-start">
@@ -399,6 +473,7 @@ export default function WithSubnavigation() {
                         key: option.key,
                         comp: option.comp,
                         step: option.step,
+                        deltaKey: option.deltaKey,
                       });
                     })}
                   </VStack>
@@ -423,7 +498,7 @@ export default function WithSubnavigation() {
                       onCreateOption={(inputValue) => {
                         const val = parseFloat(inputValue);
                         let newState = [...params];
-                        newState[ind].met_value = val.value;
+                        newState[ind].met_value = val;
                         setParams(newState);
                         setMetOptions((prev) => [
                           ...prev,
@@ -437,16 +512,15 @@ export default function WithSubnavigation() {
                       options={metOptions}
                     />
                     {params[ind].met_value != -1 ? (
-                      <Text>Met: {params[ind].met_value}</Text>
+                      <Text>
+                        Met:{" "}
+                        <span style={{ fontWeight: "bold" }}>
+                          {params[ind].met_value}
+                        </span>
+                      </Text>
                     ) : (
                       <></>
                     )}
-                    <Text color="gray.600">
-                      A <span style={{ fontWeight: "bold" }}>met</span> is a
-                      relative measure of the metabolic rate of activity over
-                      rest. Higher levels indicate more strenuous activity, and
-                      vice versa.
-                    </Text>
                     <Text fontWeight="black">Clothing level</Text>
                     <Select
                       backgroundColor="white"
@@ -476,12 +550,25 @@ export default function WithSubnavigation() {
                         {clo_correspondence[params[ind].clo_value].description}
                       </span>
                     </Text>
-
-                    <Text color="gray.600">
-                      A <span style={{ fontWeight: "bold" }}>clo</span> is a
-                      relative measure of clothing insulation. Higher levels
-                      indicate more thermal insulation, and vice versa.
-                    </Text>
+                    {stratification != 0 ? (
+                      <>
+                        {" "}
+                        <Text
+                          fontWeight="black"
+                          color="red"
+                          textAlign={"center"}
+                          mt={3}
+                        >
+                          The second input for each parameter is to enter
+                          head-to-foot deltas.
+                        </Text>
+                        <Center w="100%">
+                          <TiArrowLeftOutline size={45} />
+                        </Center>
+                      </>
+                    ) : (
+                      <></>
+                    )}
                   </VStack>
                 </HStack>
               </>
@@ -506,8 +593,9 @@ export default function WithSubnavigation() {
                 onClick={async () => {
                   loadingModal.onOpen();
                   try {
-                    let phases = [];
-                    for (let i = 0; i < params.length; i++)
+                    let phases = [],
+                      deltas = [];
+                    for (let i = 0; i < params.length; i++) {
                       phases.push({
                         exposure_duration: params[i].exposure_duration,
                         met_activity_name: "Custom-defined Met Activity",
@@ -520,9 +608,19 @@ export default function WithSubnavigation() {
                           clo_correspondence[parseInt(params[i].clo_value)]
                             .name,
                       });
+                      deltas.push({
+                        ed: params[i].ed_delta,
+                        at: params[i].at_delta,
+                        mr: params[i].mr_delta,
+                        as: params[i].as_delta,
+                        rh: params[i].rh_delta,
+                      });
+                    }
                     const metrics = await axios
                       .post("/api/process", {
                         phases: phases,
+                        deltas: deltas,
+                        stratification: stratification,
                       })
                       .then((res) => {
                         setData(res.data);
@@ -542,11 +640,9 @@ export default function WithSubnavigation() {
                     console.log(err);
                   }
                 }}
-                isDisabled={params.some((elem) =>
-                  Object.values(elem).some((x) => x == -1 || x == "-1")
-                )}
+                isDisabled={params.some((elem) => !elem.met_value)}
               >
-                Simulate
+                Run simulation
               </Button>
             </div>
           </VStack>

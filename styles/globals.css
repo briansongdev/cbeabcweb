@@ -115,7 +115,7 @@ input:checked {
   background: -webkit-linear-gradient(-45deg, #007aff, gold);
   background: -moz-linear-gradient(-45deg, #007aff, gold);
   background: linear-gradient(-45deg, #007aff, gold);
-  animation: gradient 6s ease infinite;
+  animation: gradient 3s ease infinite;
   background-size: 400% 400%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

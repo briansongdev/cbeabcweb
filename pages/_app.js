@@ -19,6 +19,15 @@ export const theme = extendTheme({
     heading: `'IBM Plex Sans', sans-serif`,
     body: `'IBM Plex Sans', sans-serif`,
   },
+  components: {
+    Checkbox: {
+      baseStyle: {
+        control: {
+          bg: "white",
+        },
+      },
+    },
+  },
 });
 
 export default function App({ Component, pageProps }) {
