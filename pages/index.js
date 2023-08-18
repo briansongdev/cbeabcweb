@@ -11,16 +11,9 @@ import {
   useBreakpointValue,
   useDisclosure,
   Switch,
-  Container,
   HStack,
   VStack,
-  Heading,
   Spacer,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  RadioGroup,
-  Radio,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -29,17 +22,14 @@ import {
   Center,
   useToast,
   Fade,
-  useNumberInput,
   Select,
-  InputLeftAddon,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
-  Checkbox,
-  Tooltip,
 } from "@chakra-ui/react";
+import RSelect from "react-select";
 import Creatable from "react-select/creatable";
 import {
   HamburgerIcon,
@@ -103,6 +93,26 @@ const clo_correspondence = [
   },
 ];
 
+const graphsVals = [
+  { label: "Overall", value: 0 },
+  { label: "Head", value: 1 },
+  { label: "Chest", value: 2 },
+  { label: "Back", value: 3 },
+  { label: "Pelvis", value: 4 },
+  { label: "Left Upper Arm", value: 5 },
+  { label: "Right Upper Arm", value: 6 },
+  { label: "Left Lower Arm", value: 7 },
+  { label: "Right Lower Arm", value: 8 },
+  { label: "Left Hand", value: 9 },
+  { label: "Right Hand", value: 10 },
+  { label: "Left Thigh", value: 11 },
+  { label: "Right Thigh", value: 12 },
+  { label: "Left Lower Leg", value: 13 },
+  { label: "Right Lower Leg", value: 14 },
+  { label: "Left Foot", value: 15 },
+  { label: "Right Foot", value: 16 },
+];
+
 export default function WithSubnavigation() {
   const { isOpen, onToggle } = useDisclosure();
   const [params, setParams] = useState([
@@ -114,15 +124,16 @@ export default function WithSubnavigation() {
       relative_humidity: 50,
       met_value: 1,
       clo_value: "1",
-      ed_delta: 0,
+      stratification: 0,
+      // 0 = no strat, 1 = standing, 2 = seated
       at_delta: 0,
       mr_delta: 0,
       as_delta: 0,
       rh_delta: 0,
     },
   ]);
-  const [stratification, changeStratified] = useState(0);
-  // 0 = no strat, 1 = standing, 2 = seated
+  const [numtoGraph, setNumToGraph] = useState(0);
+  const [fullData, setFullData] = useState([]);
   const [ind, setIndex] = useState(0);
   const [metOptions, setMetOptions] = useState(met_auto);
   const [graphOptions, setGraph] = useState();
@@ -131,7 +142,7 @@ export default function WithSubnavigation() {
 
   const toast = useToast();
 
-  useEffect(() => {}, [graphOptions, ind]);
+  useEffect(() => {}, [graphOptions, ind, numtoGraph]);
 
   const displayOptions = [
     {
@@ -142,7 +153,6 @@ export default function WithSubnavigation() {
       key: "expd",
       step: 1,
       precision: 0,
-      deltaKey: "ed_delta",
     },
     {
       title: "Ambient temperature",
@@ -227,13 +237,14 @@ export default function WithSubnavigation() {
           </NumberInput>
           <Text>{unit}</Text>
           <Spacer />
-          {stratification != 0 ? (
+          {params[ind].stratification != 0 && deltaKey ? (
             <NumberInput
               w="5vw"
               allowMouseWheel
               backgroundColor="white"
               type="number"
               textAlign="right"
+              borderColor="yellow.400"
               value={params[ind][deltaKey]}
               onChange={(e) => {
                 let newState = [...params];
@@ -392,7 +403,7 @@ export default function WithSubnavigation() {
                   );
                 })}
               </HStack>
-              <Tooltip
+              {/* <Tooltip
                 label={
                   stratification == 0
                     ? "Uniform"
@@ -410,7 +421,7 @@ export default function WithSubnavigation() {
                     changeStratified((stratification + 1) % 3);
                   }}
                 ></IconButton>
-              </Tooltip>
+              </Tooltip> */}
               <IconButton
                 w="5%"
                 colorScheme="blue"
@@ -425,7 +436,7 @@ export default function WithSubnavigation() {
                     relative_humidity: 50,
                     met_value: 1,
                     clo_value: "1",
-                    ed_delta: 0,
+                    stratification: 0,
                     at_delta: 0,
                     mr_delta: 0,
                     as_delta: 0,
@@ -449,6 +460,42 @@ export default function WithSubnavigation() {
                     Condition #{ind + 1}
                   </Text>
                   <Spacer />
+                  <Select
+                    mr={3}
+                    backgroundColor="white"
+                    onChange={(e) => {
+                      let newState = [...params];
+                      newState[ind].stratification = parseInt(e.target.value);
+                      setParams(newState);
+                    }}
+                    value={params[ind].stratification.toString()}
+                    w="15vw"
+                  >
+                    <option
+                      size="md"
+                      key={"Option1"}
+                      value="0"
+                      style={{ backgroundColor: "white" }}
+                    >
+                      Uniform
+                    </option>
+                    <option
+                      size="md"
+                      key={"Option2"}
+                      value="1"
+                      style={{ backgroundColor: "white" }}
+                    >
+                      Stratified, standing
+                    </option>
+                    <option
+                      size="md"
+                      key={"Option3"}
+                      value="2"
+                      style={{ backgroundColor: "white" }}
+                    >
+                      Stratified, sitting
+                    </option>
+                  </Select>
                   <IconButton
                     w="5%"
                     colorScheme="red"
@@ -477,7 +524,12 @@ export default function WithSubnavigation() {
                       });
                     })}
                   </VStack>
-                  <VStack pl={5} w="60%" alignItems="flex-start">
+                  <VStack
+                    pl={5}
+                    w="60%"
+                    alignItems="flex-start"
+                    justifyContent={"center"}
+                  >
                     <Text fontWeight="black">Metabolic rate</Text>
                     <Creatable
                       instanceId="zjhddjh1oi2euiAUSD901280198"
@@ -550,20 +602,21 @@ export default function WithSubnavigation() {
                         {clo_correspondence[params[ind].clo_value].description}
                       </span>
                     </Text>
-                    {stratification != 0 ? (
+                    {params[ind].stratification != 0 ? (
                       <>
-                        {" "}
                         <Text
                           fontWeight="black"
-                          color="red"
+                          color="yellow.500"
                           textAlign={"center"}
                           mt={3}
                         >
-                          The second input for each parameter is to enter
-                          head-to-foot deltas.
+                          Input head-to-foot deltas in each highlighted field.
                         </Text>
                         <Center w="100%">
-                          <TiArrowLeftOutline size={45} />
+                          <TiArrowLeftOutline
+                            style={{ color: "#007AFF" }}
+                            size={45}
+                          />
                         </Center>
                       </>
                     ) : (
@@ -607,9 +660,9 @@ export default function WithSubnavigation() {
                         clo_ensemble_name:
                           clo_correspondence[parseInt(params[i].clo_value)]
                             .name,
+                        stratification: params[i].stratification,
                       });
                       deltas.push({
-                        ed: params[i].ed_delta,
                         at: params[i].at_delta,
                         mr: params[i].mr_delta,
                         as: params[i].as_delta,
@@ -620,15 +673,18 @@ export default function WithSubnavigation() {
                       .post("/api/process", {
                         phases: phases,
                         deltas: deltas,
-                        stratification: stratification,
                       })
                       .then((res) => {
-                        setData(res.data);
+                        let tempArr = [];
+                        for (let j = 0; j < res.data.length; j++) {
+                          tempArr.push(res.data[j][numtoGraph]);
+                        }
+                        setData(tempArr);
+                        setFullData(res.data);
                         setGraph(
                           graphBuilderOptions({
-                            title:
-                              "Comfort and Sensation vs. Time (click above to turn on/off, scroll to zoom)",
-                            data: res.data,
+                            title: "Comfort and Sensation vs. Time",
+                            data: tempArr,
                             legends: ["Comfort", "Sensation"],
                           })
                         );
@@ -658,6 +714,39 @@ export default function WithSubnavigation() {
                   w="100%"
                   borderRadius="10px"
                 >
+                  <RSelect
+                    className="basic-single"
+                    classNamePrefix="select"
+                    defaultValue={graphsVals[numtoGraph]}
+                    isSearchable={true}
+                    isClearable={false}
+                    options={graphsVals}
+                    instanceId="zjhddiasdwjh1oi2euiAUSD901280198"
+                    styles={{
+                      control: (baseStyles, state) => ({
+                        ...baseStyles,
+                        width: "20vw",
+                      }),
+                    }}
+                    placeholder="Input body part to graph."
+                    onChange={(val) => {
+                      loadingModal.onOpen();
+                      setNumToGraph(val.value);
+                      let changedArr = [];
+                      for (let j = 0; j < fullData.length; j++) {
+                        changedArr.push(fullData[j][val.value]);
+                      }
+                      setGraph(
+                        graphBuilderOptions({
+                          title:
+                            "Comfort and Sensation vs. Time - " + val.label,
+                          data: changedArr,
+                          legends: ["Comfort", "Sensation"],
+                        })
+                      );
+                      loadingModal.onClose();
+                    }}
+                  />
                   <Box width="100%" height="40vh">
                     <ReactECharts notMerge={true} option={graphOptions} />
                   </Box>
@@ -665,44 +754,49 @@ export default function WithSubnavigation() {
                     <Text fontWeight="black">
                       After {graphData.length} minutes...
                     </Text>
-                    <Text fontWeight="600">
-                      Average comfort:{" "}
-                      {(
-                        graphData.reduce((r, c) => r + c.comfort, 0) /
-                        graphData.length
-                      ).toPrecision(3)}
-                    </Text>
-                    <Text fontWeight="600">
-                      Average sensation:{" "}
-                      {(
-                        graphData.reduce((r, c) => r + c.sensation, 0) /
-                        graphData.length
-                      ).toPrecision(3)}
-                    </Text>
-                    <Text>
-                      Starting comfort: {graphData[0].comfort.toPrecision(3)} |
-                      Final comfort:{" "}
-                      {graphData[graphData.length - 1].comfort.toPrecision(3)}
-                    </Text>
-                    <Text>
-                      ∆ comfort:{" "}
-                      {(
-                        graphData[graphData.length - 1].comfort -
-                        graphData[0].comfort
-                      ).toPrecision(3)}
-                    </Text>
-                    <Text>
-                      Starting sensation:{" "}
-                      {graphData[0].sensation.toPrecision(3)} | Final sensation:{" "}
-                      {graphData[graphData.length - 1].sensation.toPrecision(3)}
-                    </Text>
-                    <Text>
-                      ∆ sensation:{" "}
-                      {(
-                        graphData[graphData.length - 1].sensation -
-                        graphData[0].sensation
-                      ).toPrecision(3)}
-                    </Text>
+                    <HStack>
+                      <VStack>
+                        <Text fontWeight="600">
+                          Average comfort:{" "}
+                          {(
+                            graphData.reduce((r, c) => r + c.comfort, 0) /
+                            graphData.length
+                          ).toPrecision(3)}
+                        </Text>
+                        <Text fontWeight="600">
+                          Average sensation:{" "}
+                          {(
+                            graphData.reduce((r, c) => r + c.sensation, 0) /
+                            graphData.length
+                          ).toPrecision(3)}
+                        </Text>
+                      </VStack>
+                      <VStack align="end">
+                        <Text>
+                          Start: {graphData[0].comfort.toPrecision(3)} | Final:{" "}
+                          {graphData[graphData.length - 1].comfort.toPrecision(
+                            3
+                          )}{" "}
+                          | ∆:{" "}
+                          {(
+                            graphData[graphData.length - 1].comfort -
+                            graphData[0].comfort
+                          ).toPrecision(3)}
+                        </Text>
+                        <Text>
+                          Start: {graphData[0].sensation.toPrecision(3)} |
+                          Final:{" "}
+                          {graphData[
+                            graphData.length - 1
+                          ].sensation.toPrecision(3)}{" "}
+                          | ∆:{" "}
+                          {(
+                            graphData[graphData.length - 1].sensation -
+                            graphData[0].sensation
+                          ).toPrecision(3)}
+                        </Text>
+                      </VStack>
+                    </HStack>
                   </VStack>
                 </VStack>
               </>

@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       let phases = [],
         currTimer = 0;
       for (let i = 0; i < req.body.phases.length; i++) {
-        if (req.body.stratification == 0) {
+        if (req.body.phases[i].stratification == 0) {
           phases.push({
             start_time: currTimer,
             time_units: "minutes",
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
             },
             clo_ensemble_name: req.body.phases[i].clo_ensemble_name,
           });
-        } else if (req.body.stratification == 1) {
+        } else if (req.body.phases[i].stratification == 1) {
           phases.push({
             start_time: currTimer,
             time_units: "minutes",
@@ -615,7 +615,14 @@ export default async function handler(req, res) {
             ctr = 0;
           for (let i = 0; i < req.body.phases.length; i++) {
             for (let j = 0; j < req.body.phases[i].exposure_duration; j++) {
-              graphObject.push(result.data.results[ctr].overall);
+              let innerGraph = [];
+              innerGraph.push(result.data.results[ctr].overall);
+              for (const key in result.data.results[ctr].segments) {
+                if (result.data.results[ctr].segments.hasOwnProperty(key)) {
+                  innerGraph.push(result.data.results[ctr].segments[key]);
+                }
+              }
+              graphObject.push(innerGraph);
               ctr += 1;
             }
           }

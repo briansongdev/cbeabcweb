@@ -1,5 +1,5 @@
 import "@/styles/globals.css";
-import { ChakraProvider } from "@chakra-ui/react";
+import { ChakraProvider, theme } from "@chakra-ui/react";
 import { extendTheme } from "@chakra-ui/react";
 
 import "@fontsource/ibm-plex-sans/400.css";
@@ -13,7 +13,7 @@ const colors = {
   },
 };
 
-export const theme = extendTheme({
+export const newTheme = extendTheme({
   colors,
   fonts: {
     heading: `'IBM Plex Sans', sans-serif`,
@@ -27,12 +27,33 @@ export const theme = extendTheme({
         },
       },
     },
+    NumberInput: {
+      parts: ["field", "stepper"],
+      sizes: {
+        noBorder: {
+          stepper: {
+            ...theme.components.NumberInput.sizes.md.stepper,
+            _first: {
+              borderTopEndRadius: "none",
+            },
+            _last: {
+              ...theme.components.NumberInput.sizes.md.stepper._last,
+              borderBottomEndRadius: "none",
+            },
+          },
+          field: {
+            ...theme.components.NumberInput.sizes.md.field,
+            borderRadius: "none",
+          },
+        },
+      },
+    },
   },
 });
 
 export default function App({ Component, pageProps }) {
   return (
-    <ChakraProvider theme={theme}>
+    <ChakraProvider theme={newTheme}>
       <Component {...pageProps} />
     </ChakraProvider>
   );

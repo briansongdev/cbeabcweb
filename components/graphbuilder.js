@@ -93,5 +93,6 @@ export const graphBuilderOptions = (data) => {
       },
     ],
   };
+
   return options;
 };
