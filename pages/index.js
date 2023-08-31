@@ -44,12 +44,71 @@ import {
   StarIcon,
 } from "@chakra-ui/icons";
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import axios from "axios";
 import ReactECharts from "echarts-for-react";
 import { graphBuilderOptions } from "../components/graphbuilder";
-import { PiWaveform } from "react-icons/pi";
-import { TiArrowLeftOutline } from "react-icons/ti";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { useLoader, Canvas, useThree } from "@react-three/fiber";
+
+import { OrbitControls, PerspectiveCamera, useGLTF } from "@react-three/drei";
+
+const places = [1, 3, 4, 2, 2, 2, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5];
+
+const determineColor = (cs, which) => {
+  // cs = [comfort, sensation]
+  // which = True => comfort, else => sensation
+  let c;
+  if (which) {
+    c = cs[0];
+    if (c < -1) return "black";
+    else if (c >= -1 && c <= 1) return "gray";
+    else return "white";
+  } else {
+    c = cs[1];
+    if (c < -1) return "blue";
+    else if (c >= -1 && c <= 1) return "green";
+    else return "pink";
+  }
+};
+
+export function Model({ colors }) {
+  const { nodes, materials } = useGLTF("humanbody.gltf");
+
+  return (
+    <group dispose={null}>
+      {colors.map((obj, index) => {
+        if (index == 0)
+          return (
+            <mesh
+              castShadow
+              receiveShadow
+              geometry={nodes["Basemesh"].geometry}
+              material={nodes["Basemesh"].material}
+              key={index + 1}
+            >
+              <meshStandardMaterial color={colors[0]} />
+            </mesh>
+          );
+        else {
+          return (
+            <mesh
+              castShadow
+              receiveShadow
+              geometry={nodes["Basemesh_" + index.toString()].geometry}
+              material={nodes["Basemesh_" + index.toString()].material}
+              key={index + 10}
+            >
+              <meshStandardMaterial color={colors[index]} />
+            </mesh>
+          );
+        }
+      })}
+    </group>
+  );
+}
+
+useGLTF.preload("humanbody.gltf");
 
 const met_auto = [
   {
@@ -113,6 +172,17 @@ const graphsVals = [
   { label: "Right Foot", value: 16 },
 ];
 
+const comfOrSensation = [
+  {
+    label: "3D Model Display - Comfort",
+    value: 0,
+  },
+  {
+    label: "3D Model Display - Sensation",
+    value: 1,
+  },
+];
+
 export default function WithSubnavigation() {
   const { isOpen, onToggle } = useDisclosure();
   const [params, setParams] = useState([
@@ -133,16 +203,45 @@ export default function WithSubnavigation() {
     },
   ]);
   const [numtoGraph, setNumToGraph] = useState(0);
+  const [comfOrSensBool, setComfOrSensBool] = useState(0);
+  const [currInd, setCurrInd] = useState(0);
   const [fullData, setFullData] = useState([]);
   const [ind, setIndex] = useState(0);
   const [metOptions, setMetOptions] = useState(met_auto);
   const [graphOptions, setGraph] = useState();
   const [graphData, setData] = useState([]);
   const loadingModal = useDisclosure();
+  const [canAccess, setAccess] = useState(true);
+  const [bodyColors, setBodyColors] = useState([
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+    "white",
+  ]);
 
   const toast = useToast();
 
-  useEffect(() => {}, [graphOptions, ind, numtoGraph]);
+  useEffect(() => {}, [
+    graphOptions,
+    ind,
+    numtoGraph,
+    bodyColors,
+    comfOrSensBool,
+  ]);
 
   const displayOptions = [
     {
@@ -266,6 +365,14 @@ export default function WithSubnavigation() {
         </HStack>
       </div>
     );
+  };
+
+  const onChartClick = (params) => {
+    console.log("Chart clicked", params);
+  };
+
+  const onEvents = {
+    click: onChartClick,
   };
 
   return (
@@ -610,14 +717,11 @@ export default function WithSubnavigation() {
                           textAlign={"center"}
                           mt={3}
                         >
-                          Input head-to-foot deltas in each highlighted field.
+                          Yellow fields: head-to-foot deltas.
+                          <br />
+                          You are only seeing this indication because the data
+                          is selected as stratified.
                         </Text>
-                        <Center w="100%">
-                          <TiArrowLeftOutline
-                            style={{ color: "#007AFF" }}
-                            size={45}
-                          />
-                        </Center>
                       </>
                     ) : (
                       <></>
@@ -689,6 +793,27 @@ export default function WithSubnavigation() {
                           })
                         );
                         loadingModal.onClose();
+                        setAccess(false);
+                        for (let time = 0; time < res.data.length; time++) {
+                          setTimeout(() => {
+                            let colorsArr = [];
+                            for (let i = 0; i <= 17; i++) {
+                              colorsArr.push(
+                                determineColor(
+                                  [
+                                    res.data[time][places[i]].comfort,
+                                    res.data[time][places[i]].sensation,
+                                  ],
+                                  true
+                                )
+                              );
+                              setBodyColors(colorsArr);
+                            }
+                          }, 300 * time);
+                          setTimeout(() => {
+                            setAccess(true);
+                          }, 300 * res.data.length);
+                        }
                       });
                   } catch (err) {
                     loadingModal.onClose();
@@ -714,91 +839,143 @@ export default function WithSubnavigation() {
                   w="100%"
                   borderRadius="10px"
                 >
-                  <RSelect
-                    className="basic-single"
-                    classNamePrefix="select"
-                    defaultValue={graphsVals[numtoGraph]}
-                    isSearchable={true}
-                    isClearable={false}
-                    options={graphsVals}
-                    instanceId="zjhddiasdwjh1oi2euiAUSD901280198"
-                    styles={{
-                      control: (baseStyles, state) => ({
-                        ...baseStyles,
-                        width: "20vw",
-                      }),
-                    }}
-                    placeholder="Input body part to graph."
-                    onChange={(val) => {
-                      loadingModal.onOpen();
-                      setNumToGraph(val.value);
-                      let changedArr = [];
-                      for (let j = 0; j < fullData.length; j++) {
-                        changedArr.push(fullData[j][val.value]);
-                      }
-                      setGraph(
-                        graphBuilderOptions({
-                          title:
-                            "Comfort and Sensation vs. Time - " + val.label,
-                          data: changedArr,
-                          legends: ["Comfort", "Sensation"],
-                        })
-                      );
-                      loadingModal.onClose();
-                    }}
-                  />
+                  <HStack>
+                    <RSelect
+                      className="basic-single"
+                      classNamePrefix="select"
+                      defaultValue={graphsVals[numtoGraph]}
+                      isSearchable={true}
+                      isClearable={false}
+                      options={graphsVals}
+                      instanceId="zjhddiasdwjh1oi2euiAUSD901289990198"
+                      styles={{
+                        control: (baseStyles, state) => ({
+                          ...baseStyles,
+                          width: "20vw",
+                        }),
+                      }}
+                      placeholder="Input body part to graph."
+                      onChange={(val) => {
+                        loadingModal.onOpen();
+                        setNumToGraph(val.value);
+                        let changedArr = [];
+                        for (let j = 0; j < fullData.length; j++) {
+                          changedArr.push(fullData[j][val.value]);
+                        }
+                        setGraph(
+                          graphBuilderOptions({
+                            title:
+                              "Comfort and Sensation vs. Time - " + val.label,
+                            data: changedArr,
+                            legends: ["Comfort", "Sensation"],
+                          })
+                        );
+                        loadingModal.onClose();
+                      }}
+                    />
+                  </HStack>
                   <Box width="100%" height="40vh">
-                    <ReactECharts notMerge={true} option={graphOptions} />
+                    <ReactECharts
+                      // onEvents={}
+                      notMerge={true}
+                      option={graphOptions}
+                    />
                   </Box>
-                  <VStack>
-                    <Text fontWeight="black">
-                      After {graphData.length} minutes...
-                    </Text>
-                    <HStack>
-                      <VStack>
-                        <Text fontWeight="600">
-                          Average comfort:{" "}
-                          {(
-                            graphData.reduce((r, c) => r + c.comfort, 0) /
-                            graphData.length
-                          ).toPrecision(3)}
-                        </Text>
-                        <Text fontWeight="600">
-                          Average sensation:{" "}
-                          {(
-                            graphData.reduce((r, c) => r + c.sensation, 0) /
-                            graphData.length
-                          ).toPrecision(3)}
-                        </Text>
-                      </VStack>
-                      <VStack align="end">
-                        <Text>
-                          Start: {graphData[0].comfort.toPrecision(3)} | Final:{" "}
-                          {graphData[graphData.length - 1].comfort.toPrecision(
-                            3
-                          )}{" "}
-                          | ∆:{" "}
-                          {(
-                            graphData[graphData.length - 1].comfort -
-                            graphData[0].comfort
-                          ).toPrecision(3)}
-                        </Text>
-                        <Text>
-                          Start: {graphData[0].sensation.toPrecision(3)} |
-                          Final:{" "}
-                          {graphData[
-                            graphData.length - 1
-                          ].sensation.toPrecision(3)}{" "}
-                          | ∆:{" "}
-                          {(
-                            graphData[graphData.length - 1].sensation -
-                            graphData[0].sensation
-                          ).toPrecision(3)}
-                        </Text>
-                      </VStack>
-                    </HStack>
-                  </VStack>
                 </VStack>
+                <HStack alignItems="flex-start" w="100%">
+                  <div
+                    style={{
+                      height: "700px",
+                      width: "50%",
+                    }}
+                  >
+                    <Canvas>
+                      <ambientLight color="white" intensity={1} />
+                      <directionalLight
+                        color="white"
+                        intensity={3}
+                        position={[0, 1, 0]}
+                      />
+                      <directionalLight
+                        color="white"
+                        intensity={3}
+                        position={[0, 0, 1]}
+                      />
+                      <directionalLight
+                        color="white"
+                        intensity={3}
+                        position={[1, 0, 0]}
+                      />
+                      <directionalLight
+                        color="white"
+                        intensity={3}
+                        position={[0, 0, -1]}
+                      />
+                      <PerspectiveCamera
+                        makeDefault
+                        position={[0, 200, 500]}
+                        aspect={1}
+                        fov={50}
+                        zoom={1.3}
+                      />
+                      <Suspense fallback={null}>
+                        <Model colors={bodyColors} />
+                        <OrbitControls enableZoom={false} />
+                      </Suspense>
+                    </Canvas>
+                  </div>
+                  <VStack w="50%" alignItems="left">
+                    <RSelect
+                      className="basic-single"
+                      classNamePrefix="select"
+                      defaultValue={comfOrSensation[comfOrSensBool]}
+                      isSearchable={true}
+                      isClearable={false}
+                      options={comfOrSensation}
+                      instanceId="zjhddiasdwjh1oi2euiAUSD901280198adio12e"
+                      styles={{
+                        control: (baseStyles, state) => ({
+                          ...baseStyles,
+                          width: "20vw",
+                        }),
+                      }}
+                      isDisabled={!canAccess}
+                      placeholder="Input human body display as comfort/sensation."
+                      onChange={(val) => {
+                        setComfOrSensBool(val.value);
+                        setAccess(false);
+                        for (let time = 0; time < fullData.length; time++) {
+                          setTimeout(() => {
+                            let colorsArr = [];
+                            for (let i = 0; i <= 17; i++) {
+                              colorsArr.push(
+                                determineColor(
+                                  [
+                                    fullData[time][places[i]].comfort,
+                                    fullData[time][places[i]].sensation,
+                                  ],
+                                  val.value == 0
+                                )
+                              );
+                              setBodyColors(colorsArr);
+                            }
+                          }, 300 * time);
+                        }
+                        setTimeout(() => {
+                          setAccess(true);
+                        }, 300 * fullData.length);
+                      }}
+                    />
+                    <Text fontWeight="bold">Running simulation...</Text>
+                    {canAccess ? (
+                      <Text>
+                        Simulation is done. You can switch modes of display.
+                      </Text>
+                    ) : (
+                      <Text>The simulation is in progress.</Text>
+                    )}
+                  </VStack>
+                </HStack>
               </>
             ) : (
               <Text>
