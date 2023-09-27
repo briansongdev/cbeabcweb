@@ -1,0 +1,25 @@
+    // <group {...props} dispose={null}>
+    //   {colors.map((obj, index) => {
+    //     if (index == 0)
+    //       return (
+    //         <mesh
+    //           castShadow
+    //           receiveShadow
+    //           geometry={nodes["Basemesh"].geometry}
+    //           material={nodes["Basemesh"].material}
+    //         >
+    //           <meshStandardMaterial color="hotpink" />
+    //         </mesh>
+    //       );
+    //     else
+    //       return (
+    //         <mesh
+    //           castShadow
+    //           receiveShadow
+    //           geometry={nodes["Basemesh_" + (index + 1).toString()].geometry}
+    //           material={nodes["Basemesh_" + (index + 1).toString()].material}
+    //         >
+    //           <meshStandardMaterial color="hotpink" />
+    //         </mesh>
+    //       );
+    //   })}
