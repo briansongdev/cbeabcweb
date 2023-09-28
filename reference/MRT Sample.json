@@ -1,0 +1,230 @@
+{
+	"room": {
+		"width":10,
+		"length": 5,
+		"height": 2.6,
+		"north_azimuth": 0
+	}
+	"surfaces": [
+	{
+		"name":"West wall",
+		"temperature": 25,
+		"emissivity": 0.9,
+		"panels" : [
+		{
+			"name": "panel",
+			"is_active": true,
+			"is_window": true,
+			"tsol": 0.8,
+			"temperature": 30,
+			"emissivity": 0.84,
+			"width": 2,
+			"height": 1,
+			"xposition": 1,
+			"yposition": 1
+		}
+		]
+	},
+	{
+		"name":"North wall",
+		"temperature": 25,
+		"emissivity": 0.9,
+		"panels" : [
+		]
+	},
+	{
+		"name":"East wall",
+		"temperature": 25,
+		"emissivity": 0.9,
+		"panels" : [
+		]
+	},
+	{
+		"name":"South wall",
+		"temperature": 25,
+		"emissivity": 0.9,
+		"panels" : [
+		]
+	},	
+	{
+		"name":"Ceiling",
+		"temperature": 25,
+		"emissivity": 0.9,
+		"panels" : [
+		]
+	},
+	{
+		"name":"Floor",
+		"temperature": 25,
+		"emissivity": 0.9,
+		"panels" : [
+		]
+	}	
+	],
+	"occupant": {
+		"xposition": 3,
+		"yposition": 2,
+		"zposition": 0,
+		"azimuth": 180,
+		"posture": "seated"
+		},
+	"solar": {
+		"altitude": 30,
+		"azimuth": 180,
+		"fbes": 0.5,
+		"ldir": 700,
+		"asa": 0.7
+	},
+	"comfort": {
+		"ta": 25,
+		"rh": 50,
+		"vel": 0.15,
+		"met": 1.0,
+		"clo": 0.5
+	}
+	"settings": {
+		"display": "MRT",
+		"autoscale": true,
+		"scaleMax": 40,
+		"scaleMin": 20,
+		"global_surface_temperature": 25
+	},
+	"results": {
+		"mrt": 25,
+		"longwave_dmrt": 0,
+		"segment_data": [
+		{
+			"name": "head",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		}
+		"segment_data": [
+		{
+			"name": "Chest",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		,
+		"segment_data": [
+		{
+			"name": "Back",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		},
+		"segment_data": [
+		{
+			"name": "Pelvis",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		},
+		"segment_data": [
+		{
+			"name": "Left Upper Arm",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		}
+		"segment_data": [
+		{
+			"name": "Right Upper Arm",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		}
+		"segment_data": [
+		{
+			"name": "Left Lower Arm",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		}
+		"segment_data": [
+		{
+			"name": "Right Lower Arm",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		}
+		"segment_data": [
+		{
+			"name": "Left Hand",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		}
+		"segment_data": [
+		{
+			"name": "Right Hand",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		}
+		"segment_data": [
+		{
+			"name": "Left Thigh",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		}
+		"segment_data": [
+		{
+			"name": "Right Thigh",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		}
+		"segment_data": [
+		{
+			"name": "Left Lower Leg",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		}
+		"segment_data": [
+		{
+			"name": "Right Lower Leg",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		}
+		"segment_data": [
+		{
+			"name": "Left Foot",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		}
+		"segment_data": [
+		{
+			"name": "Right Foot",
+			"mrt": 25,
+			"longwave_mrt": 25,
+			"shortwave_dmrt": 0,
+			"shortwave": 0
+		}
+		]
+	}
+	
+}
+
+		
+
+	
