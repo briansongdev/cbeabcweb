@@ -49,33 +49,31 @@ import { useEffect, useState, useRef, Suspense } from "react";
 import axios from "axios";
 import ReactECharts from "echarts-for-react";
 import { graphBuilderOptions } from "../components/graphbuilder";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { useLoader, Canvas, useThree } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 
-import { OrbitControls, PerspectiveCamera, useGLTF } from "@react-three/drei";
+import {
+  OrbitControls,
+  PerspectiveCamera,
+  Stage,
+  useGLTF,
+} from "@react-three/drei";
 
 const places = [1, 3, 4, 2, 2, 2, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5];
 
-const determineColor = (cs, which) => {
+const determineColor = (cs) => {
   // cs = [comfort, sensation]
-  // which = True => comfort, else => sensation
-  let c;
-  if (which) {
-    c = cs[0];
-    if (c < -1) return "black";
-    else if (c >= -1 && c <= 1) return "gray";
-    else return "white";
-  } else {
-    c = cs[1];
-    if (c < -1) return "blue";
-    else if (c >= -1 && c <= 1) return "green";
-    else return "pink";
-  }
+  let f, s;
+  if (cs[0] < -1) f = "black";
+  else if (cs[0] >= -1 && cs[0] <= 1) f = "gray";
+  else f = "white";
+  if (cs[1] < -1) s = "blue";
+  else if (cs[1] >= -1 && cs[1] <= 1) s = "green";
+  else s = "pink";
+  return [f, s];
 };
 
 export function Model({ colors }) {
   const { nodes, materials } = useGLTF("humanbody.gltf");
-
   return (
     <group dispose={null}>
       {colors.map((obj, index) => {
@@ -173,17 +171,6 @@ const graphsVals = [
   { label: "Right Foot", value: 16 },
 ];
 
-const comfOrSensation = [
-  {
-    label: "3D Model Display - Comfort",
-    value: 0,
-  },
-  {
-    label: "3D Model Display - Sensation",
-    value: 1,
-  },
-];
-
 export default function WithSubnavigation() {
   const { isOpen, onToggle } = useDisclosure();
   const [params, setParams] = useState([
@@ -206,15 +193,14 @@ export default function WithSubnavigation() {
   const [cache, setCache] = useState();
 
   const [numtoGraph, setNumToGraph] = useState(0);
-  const [comfOrSensBool, setComfOrSensBool] = useState(0);
   const [fullData, setFullData] = useState([]);
   const [ind, setIndex] = useState(0);
   const [metOptions, setMetOptions] = useState(met_auto);
   const [graphOptions, setGraph] = useState();
   const [graphData, setData] = useState([]);
   const loadingModal = useDisclosure();
-  const [canAccess, setAccess] = useState(true);
-  const [bodyColors, setBodyColors] = useState([
+  const [bodyColors, setBodyColors] = useState([]);
+  const [currentColorArray, setCurrentColorArray] = useState([
     "white",
     "white",
     "white",
@@ -238,7 +224,7 @@ export default function WithSubnavigation() {
 
   const toast = useToast();
 
-  useEffect(() => {}, [graphOptions, ind, numtoGraph, comfOrSensBool]);
+  useEffect(() => {}, [graphOptions, ind, numtoGraph, currentColorArray]);
 
   const displayOptions = [
     {
@@ -307,9 +293,8 @@ export default function WithSubnavigation() {
           {title}
         </Text>
         <HStack width="100%">
-          {/* <InputLeftAddon backgroundColor="white">{icon}</InputLeftAddon> */}
           <NumberInput
-            w="5vw"
+            w="7vw"
             allowMouseWheel
             backgroundColor="white"
             type="number"
@@ -366,6 +351,12 @@ export default function WithSubnavigation() {
 
   const onEvents = {
     click: (params) => {
+      let tempColorArr = [];
+      console.log(bodyColors[params.dataIndex]);
+      for (let i = 0; i < bodyColors[params.dataIndex].length; i++) {
+        tempColorArr.push(bodyColors[params.dataIndex][i][params.seriesIndex]);
+      }
+      setCurrentColorArray(tempColorArr);
       let curr = 0;
       for (let i = 0; i < cache.length; i++) {
         curr += cache[i].exposure_duration;
@@ -376,7 +367,12 @@ export default function WithSubnavigation() {
       }
     },
     mouseover: (params) => {
-      // TO BE IMPLEMENTED (display body stage)
+      let tempColorArr = [];
+      console.log(bodyColors[params.dataIndex]);
+      for (let i = 0; i < bodyColors[params.dataIndex].length; i++) {
+        tempColorArr.push(bodyColors[params.dataIndex][i][params.seriesIndex]);
+      }
+      setCurrentColorArray(tempColorArr);
     },
   };
 
@@ -624,7 +620,7 @@ export default function WithSubnavigation() {
                     })}
                   </VStack>
                   <VStack
-                    pl={5}
+                    pl={10}
                     w="70%"
                     alignItems="flex-start"
                     justifyContent={"center"}
@@ -637,7 +633,7 @@ export default function WithSubnavigation() {
                           styles={{
                             control: (baseStyles, state) => ({
                               ...baseStyles,
-                              width: "230px",
+                              width: "200px",
                             }),
                           }}
                           placeholder="Input value in mets"
@@ -677,7 +673,7 @@ export default function WithSubnavigation() {
                         <Text fontWeight="black">Clothing level</Text>
                         <Select
                           backgroundColor="white"
-                          w="230px"
+                          w="200px"
                           onChange={(e) => {
                             let newState = [...params];
                             newState[ind].clo_value = e.target.value.toString();
@@ -814,7 +810,7 @@ export default function WithSubnavigation() {
                         }
                         setData(tempArr);
                         setFullData(res.data);
-                        setCache(params);
+                        setCache(params.slice());
                         setGraph(
                           graphBuilderOptions({
                             title: "Comfort and Sensation vs. Time",
@@ -822,22 +818,41 @@ export default function WithSubnavigation() {
                             legends: ["Comfort", "Sensation"],
                           })
                         );
+                        let colorsArr = [];
+                        for (let time = 0; time < res.data.length; time++) {
+                          let bodyPartsArr = [];
+                          for (let i = 0; i <= 17; i++) {
+                            bodyPartsArr.push(
+                              determineColor([
+                                res.data[time][places[i]].comfort,
+                                res.data[time][places[i]].sensation,
+                              ])
+                            );
+                          }
+                          colorsArr.push(bodyPartsArr);
+                        }
+                        setBodyColors(colorsArr);
+                        setCurrentColorArray([
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                          "white",
+                        ]);
                         loadingModal.onClose();
-                        setAccess(false);
-                        // for (let time = 0; time < res.data.length; time++) {
-                        //     let colorsArr = [];
-                        //     for (let i = 0; i <= 17; i++) {
-                        //       colorsArr.push(
-                        //         determineColor(
-                        //           [
-                        //             res.data[time][places[i]].comfort,
-                        //             res.data[time][places[i]].sensation,
-                        //           ],
-                        //           true
-                        //         )
-                        //       );
-                        //       setBodyColors(colorsArr);
-                        //     }
                       });
                   } catch (err) {
                     loadingModal.onClose();
@@ -852,7 +867,7 @@ export default function WithSubnavigation() {
             </div>
           </VStack>
 
-          <VStack w="60%">
+          <VStack w="70%">
             {graphOptions ? (
               <>
                 <VStack
@@ -898,100 +913,64 @@ export default function WithSubnavigation() {
                       }}
                     />
                   </HStack>
-                  <Box width="100%" height="40vh">
-                    <ReactECharts
-                      notMerge={true}
-                      option={graphOptions}
-                      onEvents={onEvents}
-                    />
-                  </Box>
+                  <HStack w="100%">
+                    <VStack w="50%">
+                      <Box width="100%" height="50vh">
+                        <ReactECharts
+                          notMerge={true}
+                          option={graphOptions}
+                          onEvents={onEvents}
+                          style={{ height: "100%" }}
+                        />
+                      </Box>
+                    </VStack>
+                    <VStack w="50%">
+                      <div
+                        style={{
+                          height: "50vh",
+                          width: "100%",
+                        }}
+                      >
+                        <Canvas
+                          gl={{ preserveDrawingBuffer: true }}
+                          shadows
+                          dpr={[1, 1.5]}
+                        >
+                          <ambientLight color="white" intensity={1} />
+                          <directionalLight
+                            color="white"
+                            intensity={3}
+                            position={[0, 1, 0]}
+                          />
+                          <directionalLight
+                            color="white"
+                            intensity={3}
+                            position={[0, 0, 1]}
+                          />
+                          <directionalLight
+                            color="white"
+                            intensity={3}
+                            position={[1, 0, 0]}
+                          />
+                          <directionalLight
+                            color="white"
+                            intensity={3}
+                            position={[0, 0, -1]}
+                          />
+                          <Suspense fallback={null}>
+                            <Stage intensity={1} shadows adjustCamera>
+                              <Model colors={currentColorArray} />
+                              <OrbitControls
+                                maxPolarAngle={Math.PI / 2}
+                                minPolarAngle={Math.PI / 2}
+                              />
+                            </Stage>
+                          </Suspense>
+                        </Canvas>
+                      </div>
+                    </VStack>
+                  </HStack>
                 </VStack>
-                <HStack alignItems="flex-start" w="100%">
-                  <div
-                    style={{
-                      height: "700px",
-                      width: "50%",
-                    }}
-                  >
-                    <Canvas>
-                      <ambientLight color="white" intensity={1} />
-                      <directionalLight
-                        color="white"
-                        intensity={3}
-                        position={[0, 1, 0]}
-                      />
-                      <directionalLight
-                        color="white"
-                        intensity={3}
-                        position={[0, 0, 1]}
-                      />
-                      <directionalLight
-                        color="white"
-                        intensity={3}
-                        position={[1, 0, 0]}
-                      />
-                      <directionalLight
-                        color="white"
-                        intensity={3}
-                        position={[0, 0, -1]}
-                      />
-                      <PerspectiveCamera
-                        makeDefault
-                        position={[0, 200, 500]}
-                        aspect={1}
-                        fov={50}
-                        zoom={1.3}
-                      />
-                      <Suspense fallback={null}>
-                        <Model colors={bodyColors} />
-                        <OrbitControls enableZoom={false} />
-                      </Suspense>
-                    </Canvas>
-                  </div>
-                  <VStack w="50%" alignItems="left">
-                    <RSelect
-                      className="basic-single"
-                      classNamePrefix="select"
-                      defaultValue={comfOrSensation[comfOrSensBool]}
-                      isSearchable={true}
-                      isClearable={false}
-                      options={comfOrSensation}
-                      instanceId="zjhddiasdwjh1oi2euiAUSD901280198adio12e"
-                      styles={{
-                        control: (baseStyles, state) => ({
-                          ...baseStyles,
-                          width: "20vw",
-                        }),
-                      }}
-                      isDisabled={!canAccess}
-                      placeholder="Input human body display as comfort/sensation."
-                      onChange={(val) => {
-                        setComfOrSensBool(val.value);
-                        setAccess(false);
-                        for (let time = 0; time < fullData.length; time++) {
-                          setTimeout(() => {
-                            let colorsArr = [];
-                            for (let i = 0; i <= 17; i++) {
-                              colorsArr.push(
-                                determineColor(
-                                  [
-                                    fullData[time][places[i]].comfort,
-                                    fullData[time][places[i]].sensation,
-                                  ],
-                                  val.value == 0
-                                )
-                              );
-                              setBodyColors(colorsArr);
-                            }
-                          }, 300 * time);
-                        }
-                        // setTimeout(() => {
-                        //   setAccess(true);
-                        // }, 300 * fullData.length);
-                      }}
-                    />
-                  </VStack>
-                </HStack>
               </>
             ) : (
               <Text>
