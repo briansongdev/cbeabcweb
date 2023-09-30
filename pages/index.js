@@ -864,7 +864,7 @@ export default function WithSubnavigation() {
                           textAlign={"center"}
                           mt={3}
                         >
-                          You're in stratified menu mode. Yellow fields are
+                          You&apos;re in stratified menu mode. Yellow fields are
                           head-to-foot deltas.
                         </Text>
                         <Center w="100%">
