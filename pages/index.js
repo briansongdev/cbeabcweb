@@ -45,10 +45,9 @@ import {
   StarIcon,
 } from "@chakra-ui/icons";
 import Head from "next/head";
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense, useMemo } from "react";
 import axios from "axios";
 import ReactECharts from "echarts-for-react";
-import { graphBuilderOptions } from "../components/graphbuilder";
 import { Canvas } from "@react-three/fiber";
 
 import {
@@ -349,31 +348,165 @@ export default function WithSubnavigation() {
     );
   };
 
-  const onEvents = {
-    click: (params) => {
-      let tempColorArr = [];
-      console.log(bodyColors[params.dataIndex]);
-      for (let i = 0; i < bodyColors[params.dataIndex].length; i++) {
-        tempColorArr.push(bodyColors[params.dataIndex][i][params.seriesIndex]);
-      }
-      setCurrentColorArray(tempColorArr);
-      let curr = 0;
-      for (let i = 0; i < cache.length; i++) {
-        curr += cache[i].exposure_duration;
-        if (curr > params.dataIndex) {
-          setIndex(i);
-          break;
+  const onEvents = useMemo(
+    () => ({
+      click: (params) => {
+        let tempColorArr = [];
+        for (let i = 0; i < bodyColors[params.dataIndex].length; i++) {
+          tempColorArr.push(
+            bodyColors[params.dataIndex][i][params.seriesIndex]
+          );
         }
+        setCurrentColorArray(tempColorArr);
+        let curr = 0;
+        for (let i = 0; i < cache.length; i++) {
+          curr += cache[i].exposure_duration;
+          if (curr > params.dataIndex) {
+            setIndex(i);
+            break;
+          }
+        }
+      },
+      mouseover: (params) => {
+        // let tempColorArr = [];
+        // for (let i = 0; i < bodyColors[params.dataIndex].length; i++) {
+        //   tempColorArr.push(
+        //     bodyColors[params.dataIndex][i][params.seriesIndex]
+        //   );
+        // }
+        // setCurrentColorArray(tempColorArr);
+      },
+    }),
+    [cache, bodyColors]
+  );
+
+  // title: Comfort and Sensation vs. Time
+  // legends: ["Comfort", "Sensation"]
+
+  const colorComfort = (comfort) => {
+    if (comfort < -1) return "black";
+    else if (comfort >= -1 && comfort <= 1) return "gray";
+    else return "white";
+  };
+  const colorSensation = (sensation) => {
+    if (sensation < -1) return "blue";
+    else if (sensation >= -1 && sensation <= 1) return "green";
+    else return "pink";
+  };
+  const miniMax = (value, data) => {
+    // 0 for finding min, 1 for finding max
+    let curr = 0;
+    if (value == 0) {
+      curr = Math.min(data[0].comfort, data[0].sensation);
+      for (let i = 1; i < data.length; i++) {
+        curr = Math.min(curr, data[i].comfort, data[i].sensation);
       }
-    },
-    mouseover: (params) => {
-      let tempColorArr = [];
-      console.log(bodyColors[params.dataIndex]);
-      for (let i = 0; i < bodyColors[params.dataIndex].length; i++) {
-        tempColorArr.push(bodyColors[params.dataIndex][i][params.seriesIndex]);
+    } else {
+      curr = Math.max(data[0].comfort, data[0].sensation);
+      for (let i = 1; i < data.length; i++) {
+        curr = Math.max(curr, data[i].comfort, data[i].sensation);
       }
-      setCurrentColorArray(tempColorArr);
-    },
+    }
+    return curr;
+  };
+
+  const graphBuilderOptions = (data) => {
+    const options = {
+      textStyle: {
+        fontFamily: "IBM Plex Sans",
+      },
+      title: {
+        text: data.title,
+        left: "5%",
+        top: "8%",
+      },
+      tooltip: {
+        trigger: "axis",
+        formatter: function (params) {
+          return `<span id="inlineColor">${
+            params[0].dataIndex
+          }</span> min from start<br />${
+            params[0].seriesName
+          }: <span id="inlineColor">${params[0].data.value.toFixed(
+            3
+          )}</span><br />${
+            params[1].seriesName
+          }: <span id="inlineColor">${params[1].data.value.toFixed(3)}</span>`;
+        },
+      },
+      legend: {
+        data: data.legends,
+      },
+      grid: {
+        left: "5%",
+        right: "5%",
+        bottom: "5%",
+        containLabel: true,
+      },
+      toolbox: {
+        right: 5,
+        feature: {
+          saveAsImage: {},
+          restore: {},
+        },
+      },
+      xAxis: {
+        name: "Minutes since start",
+        nameLocation: "center",
+        nameTextStyle: { padding: 10 },
+        axisPointer: {
+          type: "shadow",
+        },
+        data: data.data.map((e, index) => {
+          return index + 1;
+        }),
+      },
+      yAxis: {
+        type: "value",
+        name: "Value",
+        nameLocation: "center",
+        nameTextStyle: { padding: 10 },
+        min: parseInt(Math.floor(miniMax(0, data.data))),
+        max: parseInt(Math.ceil(miniMax(1, data.data))),
+      },
+      dataZoom: [
+        {
+          type: "inside",
+        },
+      ],
+      series: [
+        {
+          name: data.legends[0],
+          type: "line",
+          data: data.data.map(function (item) {
+            return {
+              value: item.comfort,
+              itemStyle: {
+                normal: {
+                  color: colorComfort(item.comfort),
+                },
+              },
+            };
+          }),
+        },
+        {
+          name: data.legends[1],
+          type: "line",
+          data: data.data.map(function (item) {
+            return {
+              value: item.sensation,
+              itemStyle: {
+                normal: {
+                  color: colorSensation(item.sensation),
+                },
+              },
+            };
+          }),
+        },
+      ],
+    };
+
+    return options;
   };
 
   return (
@@ -537,7 +670,7 @@ export default function WithSubnavigation() {
             </HStack>
             <VStack
               w="100%"
-              backgroundColor="gray.100"
+              backgroundColor="gray.200"
               borderRadius="10px"
               padding={5}
               spacing={1}
@@ -914,8 +1047,8 @@ export default function WithSubnavigation() {
                     />
                   </HStack>
                   <HStack w="100%">
-                    <VStack w="50%">
-                      <Box width="100%" height="50vh">
+                    <VStack w="75%">
+                      <Box width="100%" height="40vh">
                         <ReactECharts
                           notMerge={true}
                           option={graphOptions}
@@ -924,7 +1057,7 @@ export default function WithSubnavigation() {
                         />
                       </Box>
                     </VStack>
-                    <VStack w="50%">
+                    <VStack w="25%">
                       <div
                         style={{
                           height: "50vh",
@@ -933,8 +1066,8 @@ export default function WithSubnavigation() {
                       >
                         <Canvas
                           gl={{ preserveDrawingBuffer: true }}
+                          camera={{ position: [0, 0, 150], fov: 50, zoom: 1.6 }}
                           shadows
-                          dpr={[1, 1.5]}
                         >
                           <ambientLight color="white" intensity={1} />
                           <directionalLight

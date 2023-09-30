@@ -133,3 +133,8 @@ input:checked {
     background-position: 0% 50%;
   }
 }
+
+#inlineColor {
+  color: black;
+  font-weight: bold;
+}
