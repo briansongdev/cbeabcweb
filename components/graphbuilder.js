@@ -11,9 +11,26 @@ const colorSensation = (sensation) => {
   else if (sensation >= -1 && sensation <= 1) return "green";
   else return "pink";
 };
+const miniMax = (value, data) => {
+  // 0 for finding min, 1 for finding max
+  let curr = 0;
+  if (value == 0) {
+    curr = Math.min(data[0].comfort, data[0].sensation);
+    for (let i = 1; i < data.length; i++) {
+      curr = Math.min(curr, data[i].comfort, data[i].sensation);
+    }
+  } else {
+    curr = Math.max(data[0].comfort, data[0].sensation);
+    for (let i = 1; i < data.length; i++) {
+      curr = Math.max(curr, data[i].comfort, data[i].sensation);
+    }
+  }
+  return curr;
+};
 
 export const graphBuilderOptions = (data) => {
   const options = {
+    animation: false,
     textStyle: {
       fontFamily: "IBM Plex Sans",
     },
@@ -54,8 +71,8 @@ export const graphBuilderOptions = (data) => {
       name: "Value",
       nameLocation: "center",
       nameTextStyle: { padding: 10 },
-      min: -4,
-      max: 4,
+      min: parseInt(Math.floor(miniMax(0, data.data))),
+      max: parseInt(Math.ceil(miniMax(1, data.data))),
     },
     dataZoom: [
       {

@@ -28,6 +28,7 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
+  Tooltip,
 } from "@chakra-ui/react";
 import RSelect from "react-select";
 import Creatable from "react-select/creatable";
@@ -202,9 +203,10 @@ export default function WithSubnavigation() {
       rh_delta: 0,
     },
   ]);
+  const [cache, setCache] = useState();
+
   const [numtoGraph, setNumToGraph] = useState(0);
   const [comfOrSensBool, setComfOrSensBool] = useState(0);
-  const [currInd, setCurrInd] = useState(0);
   const [fullData, setFullData] = useState([]);
   const [ind, setIndex] = useState(0);
   const [metOptions, setMetOptions] = useState(met_auto);
@@ -232,20 +234,15 @@ export default function WithSubnavigation() {
     "white",
     "white",
   ]);
+  const [notInStratMenu, setStratMenuVisible] = useState(true);
 
   const toast = useToast();
 
-  useEffect(() => {}, [
-    graphOptions,
-    ind,
-    numtoGraph,
-    bodyColors,
-    comfOrSensBool,
-  ]);
+  useEffect(() => {}, [graphOptions, ind, numtoGraph, comfOrSensBool]);
 
   const displayOptions = [
     {
-      title: "Exposure duration",
+      title: "Exposure time",
       icon: <TimeIcon color="gray.400" />,
       unit: "min",
       val: "exposure_duration",
@@ -254,7 +251,7 @@ export default function WithSubnavigation() {
       precision: 0,
     },
     {
-      title: "Ambient temperature",
+      title: "Ambient temp",
       icon: <SunIcon color="gray.400" />,
       unit: "°C",
       val: "air_temperature",
@@ -264,7 +261,7 @@ export default function WithSubnavigation() {
       deltaKey: "at_delta",
     },
     {
-      title: "Mean radiant temperature",
+      title: "Mean rad temp",
       icon: <StarIcon color="gray.400" />,
       unit: "°C",
       val: "radiant_temperature",
@@ -336,7 +333,7 @@ export default function WithSubnavigation() {
           </NumberInput>
           <Text>{unit}</Text>
           <Spacer />
-          {params[ind].stratification != 0 && deltaKey ? (
+          {!notInStratMenu && params[ind].stratification != 0 && deltaKey ? (
             <NumberInput
               w="5vw"
               allowMouseWheel
@@ -367,12 +364,20 @@ export default function WithSubnavigation() {
     );
   };
 
-  const onChartClick = (params) => {
-    console.log("Chart clicked", params);
-  };
-
   const onEvents = {
-    click: onChartClick,
+    click: (params) => {
+      let curr = 0;
+      for (let i = 0; i < cache.length; i++) {
+        curr += cache[i].exposure_duration;
+        if (curr > params.dataIndex) {
+          setIndex(i);
+          break;
+        }
+      }
+    },
+    mouseover: (params) => {
+      // TO BE IMPLEMENTED (display body stage)
+    },
   };
 
   return (
@@ -490,7 +495,7 @@ export default function WithSubnavigation() {
         transition={{ enter: { duration: 0.5 } }}
       >
         <HStack margin="20px" alignItems="flex-start" spacing={5}>
-          <VStack w="40%">
+          <VStack w="30%">
             <HStack w="100%" padding={2} alignItems="flex-start">
               <HStack w="90%" overflowY={"scroll"} spacing={3}>
                 {params.map((elem, indx) => {
@@ -510,25 +515,6 @@ export default function WithSubnavigation() {
                   );
                 })}
               </HStack>
-              {/* <Tooltip
-                label={
-                  stratification == 0
-                    ? "Uniform"
-                    : stratification == 1
-                    ? "Stratified, standing"
-                    : "Stratified, seated"
-                }
-                bg="#007AFF"
-                hasArrow
-              >
-                <IconButton
-                  colorScheme="blue"
-                  icon={<PiWaveform />}
-                  onClick={() => {
-                    changeStratified((stratification + 1) % 3);
-                  }}
-                ></IconButton>
-              </Tooltip> */}
               <IconButton
                 w="5%"
                 colorScheme="blue"
@@ -563,7 +549,7 @@ export default function WithSubnavigation() {
             >
               <>
                 <Flex w="100%" alignItems="center">
-                  <Text fontSize="2xl" fontWeight="600">
+                  <Text fontSize="2xl" fontWeight="800">
                     Condition #{ind + 1}
                   </Text>
                   <Spacer />
@@ -574,9 +560,15 @@ export default function WithSubnavigation() {
                       let newState = [...params];
                       newState[ind].stratification = parseInt(e.target.value);
                       setParams(newState);
+                      if (
+                        parseInt(e.target.value) == 1 ||
+                        parseInt(e.target.value) == 2
+                      ) {
+                        setStratMenuVisible(false);
+                      } else setStratMenuVisible(true);
                     }}
                     value={params[ind].stratification.toString()}
-                    w="15vw"
+                    w="10vw"
                   >
                     <option
                       size="md"
@@ -617,7 +609,7 @@ export default function WithSubnavigation() {
                   ></IconButton>
                 </Flex>
                 <HStack w="100%" alignItems="flex-start">
-                  <VStack w="40%" alignItems="flex-start">
+                  <VStack w="30%" alignItems="flex-start">
                     {displayOptions.map((option) => {
                       return OptionRenderer({
                         title: option.title,
@@ -633,83 +625,109 @@ export default function WithSubnavigation() {
                   </VStack>
                   <VStack
                     pl={5}
-                    w="60%"
+                    w="70%"
                     alignItems="flex-start"
                     justifyContent={"center"}
                   >
-                    <Text fontWeight="black">Metabolic rate</Text>
-                    <Creatable
-                      instanceId="zjhddjh1oi2euiAUSD901280198"
-                      styles={{
-                        control: (baseStyles, state) => ({
-                          ...baseStyles,
-                          width: "20vw",
-                        }),
-                      }}
-                      placeholder="Input numeric value (mets)"
-                      isClearable
-                      onChange={(val) => {
-                        let newState = [...params];
-                        if (val) newState[ind].met_value = val.value;
-                        else newState[ind].met_value = -1;
-                        setParams(newState);
-                      }}
-                      onCreateOption={(inputValue) => {
-                        const val = parseFloat(inputValue);
-                        let newState = [...params];
-                        newState[ind].met_value = val;
-                        setParams(newState);
-                        setMetOptions((prev) => [
-                          ...prev,
-                          {
-                            label: val,
-                            value: val,
-                          },
-                        ]);
-                      }}
-                      defaultValue={metOptions[1]}
-                      options={metOptions}
-                    />
-                    {params[ind].met_value != -1 ? (
-                      <Text>
-                        Met:{" "}
-                        <span style={{ fontWeight: "bold" }}>
-                          {params[ind].met_value}
-                        </span>
-                      </Text>
+                    {notInStratMenu || params[ind].stratification == 0 ? (
+                      <>
+                        <Text fontWeight="black">Metabolic rate</Text>
+                        <Creatable
+                          instanceId="zjhddjh1oi2euiAUSD901280198"
+                          styles={{
+                            control: (baseStyles, state) => ({
+                              ...baseStyles,
+                              width: "230px",
+                            }),
+                          }}
+                          placeholder="Input value in mets"
+                          isClearable
+                          onChange={(val) => {
+                            let newState = [...params];
+                            if (val) newState[ind].met_value = val.value;
+                            else newState[ind].met_value = -1;
+                            setParams(newState);
+                          }}
+                          onCreateOption={(inputValue) => {
+                            const val = parseFloat(inputValue);
+                            let newState = [...params];
+                            newState[ind].met_value = val;
+                            setParams(newState);
+                            setMetOptions((prev) => [
+                              ...prev,
+                              {
+                                label: val,
+                                value: val,
+                              },
+                            ]);
+                          }}
+                          value
+                          options={metOptions}
+                        />
+                        {params[ind].met_value != -1 ? (
+                          <Text>
+                            Met:{" "}
+                            <span style={{ fontWeight: "bold" }}>
+                              {params[ind].met_value}
+                            </span>
+                          </Text>
+                        ) : (
+                          <></>
+                        )}
+                        <Text fontWeight="black">Clothing level</Text>
+                        <Select
+                          backgroundColor="white"
+                          w="230px"
+                          onChange={(e) => {
+                            let newState = [...params];
+                            newState[ind].clo_value = e.target.value.toString();
+                            setParams(newState);
+                          }}
+                          value={params[ind].clo_value}
+                        >
+                          {clo_correspondence.map((clo, index) => {
+                            return (
+                              <option
+                                size="md"
+                                key={clo.clo}
+                                value={index.toString()}
+                                style={{ backgroundColor: "white" }}
+                              >
+                                {clo.name}
+                              </option>
+                            );
+                          })}
+                        </Select>
+                        <Text color="gray.600">
+                          {clo_correspondence[params[ind].clo_value].clo} clo -{" "}
+                          <span style={{ fontSize: "13px", color: "gray.600" }}>
+                            {
+                              clo_correspondence[params[ind].clo_value]
+                                .description
+                            }
+                          </span>
+                        </Text>
+                        {params[ind].stratification != 0 ? (
+                          <Center w="100%">
+                            <Tooltip
+                              label={"Switch to delta input view"}
+                              bg="#007AFF"
+                              hasArrow
+                            >
+                              <IconButton
+                                colorScheme="blue"
+                                icon={<RepeatIcon />}
+                                onClick={() => {
+                                  setStratMenuVisible(false);
+                                }}
+                              ></IconButton>
+                            </Tooltip>
+                          </Center>
+                        ) : (
+                          <></>
+                        )}
+                      </>
                     ) : (
-                      <></>
-                    )}
-                    <Text fontWeight="black">Clothing level</Text>
-                    <Select
-                      backgroundColor="white"
-                      onChange={(e) => {
-                        let newState = [...params];
-                        newState[ind].clo_value = e.target.value.toString();
-                        setParams(newState);
-                      }}
-                      value={params[ind].clo_value}
-                    >
-                      {clo_correspondence.map((clo, index) => {
-                        return (
-                          <option
-                            size="md"
-                            key={clo.clo}
-                            value={index.toString()}
-                            style={{ backgroundColor: "white" }}
-                          >
-                            {clo.name}
-                          </option>
-                        );
-                      })}
-                    </Select>
-                    <Text color="gray.600">
-                      {clo_correspondence[params[ind].clo_value].clo} clo -{" "}
-                      <span style={{ fontSize: "13px", color: "gray.600" }}>
-                        {clo_correspondence[params[ind].clo_value].description}
-                      </span>
-                    </Text>
-                    {params[ind].stratification != 0 ? (
                       <>
                         <Text
                           fontWeight="black"
@@ -717,14 +735,25 @@ export default function WithSubnavigation() {
                           textAlign={"center"}
                           mt={3}
                         >
-                          Yellow fields: head-to-foot deltas.
-                          <br />
-                          You are only seeing this indication because the data
-                          is selected as stratified.
+                          You're in stratified menu mode. Yellow fields are
+                          head-to-foot deltas.
                         </Text>
+                        <Center w="100%">
+                          <Tooltip
+                            label={"Switch to metabolism/clothing view"}
+                            bg="#007AFF"
+                            hasArrow
+                          >
+                            <IconButton
+                              colorScheme="blue"
+                              icon={<RepeatIcon />}
+                              onClick={() => {
+                                setStratMenuVisible(true);
+                              }}
+                            ></IconButton>
+                          </Tooltip>
+                        </Center>
                       </>
-                    ) : (
-                      <></>
                     )}
                   </VStack>
                 </HStack>
@@ -785,6 +814,7 @@ export default function WithSubnavigation() {
                         }
                         setData(tempArr);
                         setFullData(res.data);
+                        setCache(params);
                         setGraph(
                           graphBuilderOptions({
                             title: "Comfort and Sensation vs. Time",
@@ -794,26 +824,20 @@ export default function WithSubnavigation() {
                         );
                         loadingModal.onClose();
                         setAccess(false);
-                        for (let time = 0; time < res.data.length; time++) {
-                          setTimeout(() => {
-                            let colorsArr = [];
-                            for (let i = 0; i <= 17; i++) {
-                              colorsArr.push(
-                                determineColor(
-                                  [
-                                    res.data[time][places[i]].comfort,
-                                    res.data[time][places[i]].sensation,
-                                  ],
-                                  true
-                                )
-                              );
-                              setBodyColors(colorsArr);
-                            }
-                          }, 300 * time);
-                          setTimeout(() => {
-                            setAccess(true);
-                          }, 300 * res.data.length);
-                        }
+                        // for (let time = 0; time < res.data.length; time++) {
+                        //     let colorsArr = [];
+                        //     for (let i = 0; i <= 17; i++) {
+                        //       colorsArr.push(
+                        //         determineColor(
+                        //           [
+                        //             res.data[time][places[i]].comfort,
+                        //             res.data[time][places[i]].sensation,
+                        //           ],
+                        //           true
+                        //         )
+                        //       );
+                        //       setBodyColors(colorsArr);
+                        //     }
                       });
                   } catch (err) {
                     loadingModal.onClose();
@@ -876,9 +900,9 @@ export default function WithSubnavigation() {
                   </HStack>
                   <Box width="100%" height="40vh">
                     <ReactECharts
-                      // onEvents={}
                       notMerge={true}
                       option={graphOptions}
+                      onEvents={onEvents}
                     />
                   </Box>
                 </VStack>
@@ -961,19 +985,11 @@ export default function WithSubnavigation() {
                             }
                           }, 300 * time);
                         }
-                        setTimeout(() => {
-                          setAccess(true);
-                        }, 300 * fullData.length);
+                        // setTimeout(() => {
+                        //   setAccess(true);
+                        // }, 300 * fullData.length);
                       }}
                     />
-                    <Text fontWeight="bold">Running simulation...</Text>
-                    {canAccess ? (
-                      <Text>
-                        Simulation is done. You can switch modes of display.
-                      </Text>
-                    ) : (
-                      <Text>The simulation is in progress.</Text>
-                    )}
                   </VStack>
                 </HStack>
               </>
