@@ -1,5 +1,7 @@
 import json
 
+# This dictionary contains the local and the whole body clothing insulation of typical clothing ensemble.
+# It is based on the study by Juyoun et al. (https://escholarship.org/uc/item/18f0r375)
 clo_ensembles_dict = {
     "nude": {
         "name": "Nude",
