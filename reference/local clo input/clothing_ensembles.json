@@ -23,11 +23,11 @@
                 "fclo": 1.0,
                 "iclo": 0.0
             },
-            "Left Shoulder": {
+            "Left Upper Arm": {
                 "fclo": 1.0,
                 "iclo": 0.0
             },
-            "Left Arm": {
+            "Left Lower Arm": {
                 "fclo": 1.0,
                 "iclo": 0.0
             },
@@ -35,11 +35,11 @@
                 "fclo": 1.0,
                 "iclo": 0.0
             },
-            "Right Shoulder": {
+            "Right Upper Arm": {
                 "fclo": 1.0,
                 "iclo": 0.0
             },
-            "Right Arm": {
+            "Right Lower Arm": {
                 "fclo": 1.0,
                 "iclo": 0.0
             },
@@ -51,7 +51,7 @@
                 "fclo": 1.0,
                 "iclo": 0.0
             },
-            "Left Leg": {
+            "Left Lower Leg": {
                 "fclo": 1.0,
                 "iclo": 0.0
             },
@@ -63,7 +63,7 @@
                 "fclo": 1.0,
                 "iclo": 0.0
             },
-            "Right Leg": {
+            "Right Lower Leg": {
                 "fclo": 1.0,
                 "iclo": 0.0
             },
@@ -97,11 +97,11 @@
                 "fclo": 1.3,
                 "iclo": 0.99
             },
-            "Left Shoulder": {
+            "Left Upper Arm": {
                 "fclo": 1.0,
                 "iclo": 0.0
             },
-            "Left Arm": {
+            "Left Lower Arm": {
                 "fclo": 1.0,
                 "iclo": 0.0
             },
@@ -109,11 +109,11 @@
                 "fclo": 1.01,
                 "iclo": 0.03
             },
-            "Right Shoulder": {
+            "Right Upper Arm": {
                 "fclo": 1.0,
                 "iclo": 0.0
             },
-            "Right Arm": {
+            "Right Lower Arm": {
                 "fclo": 1.0,
                 "iclo": 0.0
             },
@@ -125,7 +125,7 @@
                 "fclo": 1.26,
                 "iclo": 0.88
             },
-            "Left Leg": {
+            "Left Lower Leg": {
                 "fclo": 1.01,
                 "iclo": 0.05
             },
@@ -137,7 +137,7 @@
                 "fclo": 1.26,
                 "iclo": 0.88
             },
-            "Right Leg": {
+            "Right Lower Leg": {
                 "fclo": 1.01,
                 "iclo": 0.05
             },
@@ -171,11 +171,11 @@
                 "fclo": 1.31,
                 "iclo": 1.04
             },
-            "Left Shoulder": {
+            "Left Upper Arm": {
                 "fclo": 1.13,
                 "iclo": 0.42
             },
-            "Left Arm": {
+            "Left Lower Arm": {
                 "fclo": 1.0,
                 "iclo": 0.0
             },
@@ -183,11 +183,11 @@
                 "fclo": 1.0,
                 "iclo": 0.0
             },
-            "Right Shoulder": {
+            "Right Upper Arm": {
                 "fclo": 1.13,
                 "iclo": 0.42
             },
-            "Right Arm": {
+            "Right Lower Arm": {
                 "fclo": 1.0,
                 "iclo": 0.0
             },
@@ -199,7 +199,7 @@
                 "fclo": 1.17,
                 "iclo": 0.58
             },
-            "Left Leg": {
+            "Left Lower Leg": {
                 "fclo": 1.19,
                 "iclo": 0.62
             },
@@ -211,7 +211,7 @@
                 "fclo": 1.17,
                 "iclo": 0.58
             },
-            "Right Leg": {
+            "Right Lower Leg": {
                 "fclo": 1.19,
                 "iclo": 0.62
             },
@@ -245,11 +245,11 @@
                 "fclo": 1.42,
                 "iclo": 1.39
             },
-            "Left Shoulder": {
+            "Left Upper Arm": {
                 "fclo": 1.24,
                 "iclo": 0.79
             },
-            "Left Arm": {
+            "Left Lower Arm": {
                 "fclo": 1.2,
                 "iclo": 0.66
             },
@@ -257,11 +257,11 @@
                 "fclo": 1.04,
                 "iclo": 0.13
             },
-            "Right Shoulder": {
+            "Right Upper Arm": {
                 "fclo": 1.24,
                 "iclo": 0.79
             },
-            "Right Arm": {
+            "Right Lower Arm": {
                 "fclo": 1.2,
                 "iclo": 0.66
             },
@@ -273,7 +273,7 @@
                 "fclo": 1.18,
                 "iclo": 0.6
             },
-            "Left Leg": {
+            "Left Lower Leg": {
                 "fclo": 1.17,
                 "iclo": 0.57
             },
@@ -285,7 +285,7 @@
                 "fclo": 1.18,
                 "iclo": 0.6
             },
-            "Right Leg": {
+            "Right Lower Leg": {
                 "fclo": 1.17,
                 "iclo": 0.57
             },
@@ -319,11 +319,11 @@
                 "fclo": 1.51,
                 "iclo": 1.71
             },
-            "Left Shoulder": {
+            "Left Upper Arm": {
                 "fclo": 1.41,
                 "iclo": 1.36
             },
-            "Left Arm": {
+            "Left Lower Arm": {
                 "fclo": 1.39,
                 "iclo": 1.29
             },
@@ -331,11 +331,11 @@
                 "fclo": 1.06,
                 "iclo": 0.21
             },
-            "Right Shoulder": {
+            "Right Upper Arm": {
                 "fclo": 1.41,
                 "iclo": 1.36
             },
-            "Right Arm": {
+            "Right Lower Arm": {
                 "fclo": 1.39,
                 "iclo": 1.29
             },
@@ -347,7 +347,7 @@
                 "fclo": 1.21,
                 "iclo": 0.7
             },
-            "Left Leg": {
+            "Left Lower Leg": {
                 "fclo": 1.16,
                 "iclo": 0.52
             },
@@ -359,7 +359,7 @@
                 "fclo": 1.21,
                 "iclo": 0.7
             },
-            "Right Leg": {
+            "Right Lower Leg": {
                 "fclo": 1.16,
                 "iclo": 0.52
             },
@@ -393,11 +393,11 @@
                 "fclo": 1.51,
                 "iclo": 1.71
             },
-            "Left Shoulder": {
+            "Left Upper Arm": {
                 "fclo": 1.65,
                 "iclo": 2.16
             },
-            "Left Arm": {
+            "Left Lower Arm": {
                 "fclo": 1.45,
                 "iclo": 1.49
             },
@@ -405,11 +405,11 @@
                 "fclo": 1.04,
                 "iclo": 0.13
             },
-            "Right Shoulder": {
+            "Right Upper Arm": {
                 "fclo": 1.65,
                 "iclo": 2.16
             },
-            "Right Arm": {
+            "Right Lower Arm": {
                 "fclo": 1.45,
                 "iclo": 1.49
             },
@@ -421,7 +421,7 @@
                 "fclo": 1.19,
                 "iclo": 0.64
             },
-            "Left Leg": {
+            "Left Lower Leg": {
                 "fclo": 1.13,
                 "iclo": 0.43
             },
@@ -433,7 +433,7 @@
                 "fclo": 1.19,
                 "iclo": 0.64
             },
-            "Right Leg": {
+            "Right Lower Leg": {
                 "fclo": 1.13,
                 "iclo": 0.43
             },
@@ -467,11 +467,11 @@
                 "fclo": 1.66,
                 "iclo": 2.2
             },
-            "Left Shoulder": {
+            "Left Upper Arm": {
                 "fclo": 1.94,
                 "iclo": 3.14
             },
-            "Left Arm": {
+            "Left Lower Arm": {
                 "fclo": 1.62,
                 "iclo": 2.07
             },
@@ -479,11 +479,11 @@
                 "fclo": 1.02,
                 "iclo": 0.08
             },
-            "Right Shoulder": {
+            "Right Upper Arm": {
                 "fclo": 1.94,
                 "iclo": 3.14
             },
-            "Right Arm": {
+            "Right Lower Arm": {
                 "fclo": 1.62,
                 "iclo": 2.07
             },
@@ -495,7 +495,7 @@
                 "fclo": 1.2,
                 "iclo": 0.67
             },
-            "Left Leg": {
+            "Left Lower Leg": {
                 "fclo": 1.16,
                 "iclo": 0.54
             },
@@ -507,7 +507,7 @@
                 "fclo": 1.2,
                 "iclo": 0.67
             },
-            "Right Leg": {
+            "Right Lower Leg": {
                 "fclo": 1.16,
                 "iclo": 0.54
             },

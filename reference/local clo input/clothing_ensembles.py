@@ -168,14 +168,39 @@ clo_ensembles_dict = {
 def compute_fclo(iclo):
     return round(1 + 0.3 * iclo, 2)
 
-def convert_to_required_format(data_dict):
+def convert_to_required_json_format(data_dict):
+    # Define the mapping of body part names to the formatted names
+    formatted_body_part_names = {
+        "head": "Head",
+        "neck": "Neck",
+        "chest": "Chest",
+        "back": "Back",
+        "pelvis": "Pelvis",
+        "left_shoulder": "Left Upper Arm",
+        "left_arm": "Left Lower Arm",
+        "left_hand": "Left Hand",
+        "right_shoulder": "Right Upper Arm",
+        "right_arm": "Right Lower Arm",
+        "right_hand": "Right Hand",
+        "left_thigh": "Left Thigh",
+        "left_leg": "Left Lower Leg",
+        "left_foot": "Left Foot",
+        "right_thigh": "Right Thigh",
+        "right_leg": "Right Lower Leg",
+        "right_foot": "Right Foot",
+    }
+
+    # Extract body parts order from the first ensemble
+    body_parts_order = list(next(iter(data_dict.values()))['local_body_part'].keys())
+
     result = []
     for ensemble_name, ensemble_data in data_dict.items():
         segment_data = {}
-        for body_part, iclo_value in ensemble_data['local_body_part'].items():
-            # Body part names are capitalized for every word
-            formatted_body_part = " ".join([word.capitalize() for word in body_part.split("_")])
-            segment_data[formatted_body_part] = {
+
+        # Use the order defined in body_parts_order for generating segment data
+        for body_part in body_parts_order:
+            iclo_value = ensemble_data['local_body_part'][body_part]
+            segment_data[formatted_body_part_names[body_part]] = {
                 "fclo": compute_fclo(iclo_value),
                 "iclo": iclo_value
             }
@@ -187,7 +212,7 @@ def convert_to_required_format(data_dict):
         })
     return result
 
-formatted_data = convert_to_required_format(clo_ensembles_dict)
+formatted_data = convert_to_required_json_format(clo_ensembles_dict)
 
 # Saving to a JSON file
 with open('clothing_ensembles.json', 'w') as json_file:
