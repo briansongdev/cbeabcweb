@@ -1,10 +1,7 @@
 import json
 
-<<<<<<< HEAD
 # This dictionary contains the local and the whole body clothing insulation of typical clothing ensemble.
 # It is based on the study by Juyoun et al. (https://escholarship.org/uc/item/18f0r375)
-=======
->>>>>>> origin/main
 clo_ensembles_dict = {
     "nude": {
         "name": "Nude",
@@ -173,7 +170,6 @@ clo_ensembles_dict = {
 def compute_fclo(iclo):
     return round(1 + 0.3 * iclo, 2)
 
-<<<<<<< HEAD
 def convert_to_required_json_format(data_dict):
     # Define the mapping of body part names to the formatted names
     formatted_body_part_names = {
@@ -207,16 +203,6 @@ def convert_to_required_json_format(data_dict):
         for body_part in body_parts_order:
             iclo_value = ensemble_data['local_body_part'][body_part]
             segment_data[formatted_body_part_names[body_part]] = {
-=======
-def convert_to_required_format(data_dict):
-    result = []
-    for ensemble_name, ensemble_data in data_dict.items():
-        segment_data = {}
-        for body_part, iclo_value in ensemble_data['local_body_part'].items():
-            # Body part names are capitalized for every word
-            formatted_body_part = " ".join([word.capitalize() for word in body_part.split("_")])
-            segment_data[formatted_body_part] = {
->>>>>>> origin/main
                 "fclo": compute_fclo(iclo_value),
                 "iclo": iclo_value
             }
@@ -228,11 +214,7 @@ def convert_to_required_format(data_dict):
         })
     return result
 
-<<<<<<< HEAD
 formatted_data = convert_to_required_json_format(clo_ensembles_dict)
-=======
-formatted_data = convert_to_required_format(clo_ensembles_dict)
->>>>>>> origin/main
 
 # Saving to a JSON file
 with open('clothing_ensembles.json', 'w') as json_file:
