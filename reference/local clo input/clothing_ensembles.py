@@ -210,6 +210,10 @@ def convert_to_required_json_format(data_dict):
         result.append({
             "ensemble_name": ensemble_data['name'],
             "description": ensemble_name,
+            "whole_body": {
+                "fclo": compute_fclo(ensemble_data["whole_body"]),
+                "iclo": ensemble_data["whole_body"]
+            },
             "segment_data": segment_data
         })
     return result
