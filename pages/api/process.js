@@ -9,6 +9,7 @@
 // clo_ensemble_name
 
 import axios from "axios";
+import clothing from "../../reference/local clo input/clothing_ensembles.json";
 
 const stand_fr = {
   Head: 1.0,
@@ -53,542 +54,137 @@ export default async function handler(req, res) {
       let phases = [],
         currTimer = 0;
       for (let i = 0; i < req.body.phases.length; i++) {
-        if (req.body.phases[i].stratification == 0) {
-          phases.push({
-            start_time: currTimer,
-            time_units: "minutes",
-            ramp: false,
-            end_time: currTimer + req.body.phases[i].exposure_duration,
-            met_activity_name: req.body.phases[i].met_activity_name,
-            met: req.body.phases[i].met_activity_value,
-            default_data: {
-              rh: req.body.phases[i].relative_humidity / 100,
-              v: req.body.phases[i].air_speed,
+        phases.push({
+          start_time: currTimer,
+          time_units: "minutes",
+          ramp: false,
+          end_time: currTimer + req.body.phases[i].exposure_duration,
+          met_activity_name: req.body.phases[i].met_activity_name,
+          met: req.body.phases[i].met_activity_value,
+          default_data: {
+            rh: req.body.phases[i].relative_humidity[0] / 100,
+            v: req.body.phases[i].air_speed[0],
+            solar: 0,
+            ta: req.body.phases[i].air_temperature[0],
+            mrt: req.body.phases[i].radiant_temperature[0],
+          },
+          clo_ensemble_name: req.body.phases[i].clo_ensemble_name,
+          segment_data: {
+            Head: {
+              mrt: req.body.phases[i].radiant_temperature[0],
+              rh: req.body.phases[i].relative_humidity[0],
               solar: 0,
-              ta: req.body.phases[i].air_temperature,
-              mrt: req.body.phases[i].radiant_temperature,
+              ta: req.body.phases[i].air_temperature[0],
+              v: req.body.phases[i].air_speed[0],
             },
-            clo_ensemble_name: req.body.phases[i].clo_ensemble_name,
-          });
-        } else if (req.body.phases[i].stratification == 1) {
-          phases.push({
-            start_time: currTimer,
-            time_units: "minutes",
-            ramp: false,
-            end_time: currTimer + req.body.phases[i].exposure_duration,
-            met_activity_name: req.body.phases[i].met_activity_name,
-            met: req.body.phases[i].met_activity_value,
-            default_data: {
-              rh: req.body.phases[i].relative_humidity / 100,
-              v: req.body.phases[i].air_speed,
+            Chest: {
+              mrt: req.body.phases[i].radiant_temperature[1],
+              rh: req.body.phases[i].relative_humidity[1],
               solar: 0,
-              ta: req.body.phases[i].air_temperature,
-              mrt: req.body.phases[i].radiant_temperature,
+              ta: req.body.phases[i].air_temperature[1],
+              v: req.body.phases[i].air_speed[1],
             },
-            clo_ensemble_name: req.body.phases[i].clo_ensemble_name,
-            segment_data: {
-              Head: {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Head"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Head"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Head"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Head"]) * req.body.deltas[i].as,
-              },
-              Chest: {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Chest"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Chest"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Chest"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Chest"]) * req.body.deltas[i].as,
-              },
-              Back: {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Back"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Back"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Back"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Back"]) * req.body.deltas[i].as,
-              },
-              Pelvis: {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Pelvis"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Pelvis"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Pelvis"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Pelvis"]) * req.body.deltas[i].as,
-              },
-              "Left Upper Arm": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Left Upper Arm"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Left Upper Arm"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Left Upper Arm"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Left Upper Arm"]) * req.body.deltas[i].as,
-              },
-              "Right Upper Arm": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Right Upper Arm"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Right Upper Arm"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Right Upper Arm"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Right Upper Arm"]) * req.body.deltas[i].as,
-              },
-              "Left Lower Arm": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Left Lower Arm"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Left Lower Arm"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Left Lower Arm"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Left Lower Arm"]) * req.body.deltas[i].as,
-              },
-              "Right Lower Arm": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Right Lower Arm"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Right Lower Arm"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Right Lower Arm"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Right Lower Arm"]) * req.body.deltas[i].as,
-              },
-              "Left Hand": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Left Hand"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Left Hand"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Left Hand"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Left Hand"]) * req.body.deltas[i].as,
-              },
-              "Right Hand": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Right Hand"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Right Hand"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Right Hand"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Right Hand"]) * req.body.deltas[i].as,
-              },
-              "Left Thigh": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Left Thigh"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Left Thigh"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Left Thigh"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Left Thigh"]) * req.body.deltas[i].as,
-              },
-              "Right Thigh": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Right Thigh"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Right Thigh"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Right Thigh"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Right Thigh"]) * req.body.deltas[i].as,
-              },
-              "Left Lower Leg": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Left Lower Leg"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Left Lower Leg"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Left Lower Leg"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Left Lower Leg"]) * req.body.deltas[i].as,
-              },
-              "Right Lower Leg": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Right Lower Leg"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Right Lower Leg"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Right Lower Leg"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Right Lower Leg"]) * req.body.deltas[i].as,
-              },
-              "Left Foot": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Left Foot"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Left Foot"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Left Foot"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Left Foot"]) * req.body.deltas[i].as,
-              },
-              "Right Foot": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - stand_fr["Right Foot"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - stand_fr["Right Foot"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - stand_fr["Right Foot"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - stand_fr["Right Foot"]) * req.body.deltas[i].as,
-              },
-            },
-          });
-        } else {
-          phases.push({
-            start_time: currTimer,
-            time_units: "minutes",
-            ramp: false,
-            end_time: currTimer + req.body.phases[i].exposure_duration,
-            met_activity_name: req.body.phases[i].met_activity_name,
-            met: req.body.phases[i].met_activity_value,
-            default_data: {
-              rh: req.body.phases[i].relative_humidity / 100,
-              v: req.body.phases[i].air_speed,
+            Back: {
+              mrt: req.body.phases[i].radiant_temperature[2],
+              rh: req.body.phases[i].relative_humidity[2],
               solar: 0,
-              ta: req.body.phases[i].air_temperature,
-              mrt: req.body.phases[i].radiant_temperature,
+              ta: req.body.phases[i].air_temperature[2],
+              v: req.body.phases[i].air_speed[2],
             },
-            clo_ensemble_name: req.body.phases[i].clo_ensemble_name,
-            segment_data: {
-              Head: {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Head"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Head"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Head"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Head"]) * req.body.deltas[i].as,
-              },
-              Chest: {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Chest"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Chest"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Chest"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Chest"]) * req.body.deltas[i].as,
-              },
-              Back: {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Back"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Back"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Back"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Back"]) * req.body.deltas[i].as,
-              },
-              Pelvis: {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Pelvis"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Pelvis"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Pelvis"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Pelvis"]) * req.body.deltas[i].as,
-              },
-              "Left Upper Arm": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Left Upper Arm"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Left Upper Arm"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Left Upper Arm"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Left Upper Arm"]) * req.body.deltas[i].as,
-              },
-              "Right Upper Arm": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Right Upper Arm"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Right Upper Arm"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Right Upper Arm"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Right Upper Arm"]) * req.body.deltas[i].as,
-              },
-              "Left Lower Arm": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Left Lower Arm"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Left Lower Arm"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Left Lower Arm"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Left Lower Arm"]) * req.body.deltas[i].as,
-              },
-              "Right Lower Arm": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Right Lower Arm"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Right Lower Arm"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Right Lower Arm"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Right Lower Arm"]) * req.body.deltas[i].as,
-              },
-              "Left Hand": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Left Hand"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Left Hand"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Left Hand"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Left Hand"]) * req.body.deltas[i].as,
-              },
-              "Right Hand": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Right Hand"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Right Hand"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Right Hand"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Right Hand"]) * req.body.deltas[i].as,
-              },
-              "Left Thigh": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Left Thigh"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Left Thigh"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Left Thigh"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Left Thigh"]) * req.body.deltas[i].as,
-              },
-              "Right Thigh": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Right Thigh"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Right Thigh"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Right Thigh"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Right Thigh"]) * req.body.deltas[i].as,
-              },
-              "Left Lower Leg": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Left Lower Leg"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Left Lower Leg"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Left Lower Leg"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Left Lower Leg"]) * req.body.deltas[i].as,
-              },
-              "Right Lower Leg": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Right Lower Leg"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Right Lower Leg"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Right Lower Leg"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Right Lower Leg"]) * req.body.deltas[i].as,
-              },
-              "Left Foot": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Left Foot"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Left Foot"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Left Foot"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Left Foot"]) * req.body.deltas[i].as,
-              },
-              "Right Foot": {
-                mrt:
-                  req.body.phases[i].radiant_temperature +
-                  (1 - sit_fr["Right Foot"]) * req.body.deltas[i].mr,
-                rh:
-                  req.body.phases[i].relative_humidity / 100 +
-                  (1 - sit_fr["Right Foot"]) * req.body.deltas[i].rh,
-                solar: 0,
-                ta:
-                  req.body.phases[i].air_temperature +
-                  (1 - sit_fr["Right Foot"]) * req.body.deltas[i].at,
-                v:
-                  req.body.phases[i].air_speed +
-                  (1 - sit_fr["Right Foot"]) * req.body.deltas[i].as,
-              },
+            Pelvis: {
+              mrt: req.body.phases[i].radiant_temperature[3],
+              rh: req.body.phases[i].relative_humidity[3],
+              solar: 0,
+              ta: req.body.phases[i].air_temperature[3],
+              v: req.body.phases[i].air_speed[3],
             },
-          });
-        }
+            "Left Upper Arm": {
+              mrt: req.body.phases[i].radiant_temperature[4],
+              rh: req.body.phases[i].relative_humidity[4],
+              solar: 0,
+              ta: req.body.phases[i].air_temperature[4],
+              v: req.body.phases[i].air_speed[4],
+            },
+            "Right Upper Arm": {
+              mrt: req.body.phases[i].radiant_temperature[5],
+              rh: req.body.phases[i].relative_humidity[5],
+              solar: 0,
+              ta: req.body.phases[i].air_temperature[5],
+              v: req.body.phases[i].air_speed[5],
+            },
+            "Left Lower Arm": {
+              mrt: req.body.phases[i].radiant_temperature[6],
+              rh: req.body.phases[i].relative_humidity[6],
+              solar: 0,
+              ta: req.body.phases[i].air_temperature[6],
+              v: req.body.phases[i].air_speed[6],
+            },
+            "Right Lower Arm": {
+              mrt: req.body.phases[i].radiant_temperature[7],
+              rh: req.body.phases[i].relative_humidity[7],
+              solar: 0,
+              ta: req.body.phases[i].air_temperature[7],
+              v: req.body.phases[i].air_speed[7],
+            },
+            "Left Hand": {
+              mrt: req.body.phases[i].radiant_temperature[8],
+              rh: req.body.phases[i].relative_humidity[8],
+              solar: 0,
+              ta: req.body.phases[i].air_temperature[8],
+              v: req.body.phases[i].air_speed[8],
+            },
+            "Right Hand": {
+              mrt: req.body.phases[i].radiant_temperature[9],
+              rh: req.body.phases[i].relative_humidity[9],
+              solar: 0,
+              ta: req.body.phases[i].air_temperature[9],
+              v: req.body.phases[i].air_speed[9],
+            },
+            "Left Thigh": {
+              mrt: req.body.phases[i].radiant_temperature[10],
+              rh: req.body.phases[i].relative_humidity[10],
+              solar: 0,
+              ta: req.body.phases[i].air_temperature[10],
+              v: req.body.phases[i].air_speed[10],
+            },
+            "Right Thigh": {
+              mrt: req.body.phases[i].radiant_temperature[11],
+              rh: req.body.phases[i].relative_humidity[11],
+              solar: 0,
+              ta: req.body.phases[i].air_temperature[11],
+              v: req.body.phases[i].air_speed[11],
+            },
+            "Left Lower Leg": {
+              mrt: req.body.phases[i].radiant_temperature[12],
+              rh: req.body.phases[i].relative_humidity[12],
+              solar: 0,
+              ta: req.body.phases[i].air_temperature[12],
+              v: req.body.phases[i].air_speed[12],
+            },
+            "Right Lower Leg": {
+              mrt: req.body.phases[i].radiant_temperature[13],
+              rh: req.body.phases[i].relative_humidity[13],
+              solar: 0,
+              ta: req.body.phases[i].air_temperature[13],
+              v: req.body.phases[i].air_speed[13],
+            },
+            "Left Foot": {
+              mrt: req.body.phases[i].radiant_temperature[14],
+              rh: req.body.phases[i].relative_humidity[14],
+              solar: 0,
+              ta: req.body.phases[i].air_temperature[14],
+              v: req.body.phases[i].air_speed[14],
+            },
+            "Right Foot": {
+              mrt: req.body.phases[i].radiant_temperature[15],
+              rh: req.body.phases[i].relative_humidity[15],
+              solar: 0,
+              ta: req.body.phases[i].air_temperature[15],
+              v: req.body.phases[i].air_speed[15],
+            },
+          },
+        });
+
         currTimer += req.body.phases[i].exposure_duration;
       }
       const obj = {
@@ -605,6 +201,7 @@ export default async function handler(req, res) {
           neutralSimulationOutput: false,
         },
         phases: phases,
+        clothing: clothing,
       };
       const interfaceResult = await axios
         .post(process.env.DB_URL, {

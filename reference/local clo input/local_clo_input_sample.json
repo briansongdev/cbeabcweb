@@ -23,74 +23,73 @@
     {
       "ensemble_name": "testClo",
       "description": "custom summer clothing",
-        "segment_data": {
-            "Head": {
-                "fclo": 1,
-                "iclo": 0
-            },
-            "Chest": {
-                "fclo": 1.4,
-                "iclo": 1.4
-            },
-            "Back": {
-                "fclo": 1.2,
-                "iclo": 1
-            },
-            "Pelvis": {
-                "fclo": 1.4,
-                "iclo": 1.4
-            },
-            "Left Upper Arm": {
-                "fclo": 1.1,
-                "iclo": 0.3
-            },
-            "Right Upper Arm": {
-                "fclo": 1.1,
-                "iclo": 0.3
-            },
-            "Left Lower Arm": {
-                "fclo": 1,
-                "iclo": 0
-            },
-            "Right Lower Arm": {
-                "fclo": 1,
-                "iclo": 0
-            },
-            "Left Hand": {
-                "fclo": 1,
-                "iclo": 0
-            },
-            "Right Hand": {
-                "fclo": 1,
-                "iclo": 0
-            },
-            "Left Thigh": {
-                "fclo": 1.1,
-                "iclo": 0.6
-            },
-            "Right Thigh": {
-                "fclo": 1.1,
-                "iclo": 0.6
-            },
-            "Left Lower Leg": {
-                "fclo": 1,
-                "iclo": 0
-            },
-            "Right Lower Leg": {
-                "fclo": 1,
-                "iclo": 0
-            },
-            "Left Foot": {
-                "fclo": 1.1,
-                "iclo": 0.4
-            },
-            "Right Foot": {
-                "fclo": 1.1,
-                "iclo": 0.4
-            }
+      "segment_data": {
+        "Head": {
+          "fclo": 1,
+          "iclo": 0
+        },
+        "Chest": {
+          "fclo": 1.4,
+          "iclo": 1.4
+        },
+        "Back": {
+          "fclo": 1.2,
+          "iclo": 1
+        },
+        "Pelvis": {
+          "fclo": 1.4,
+          "iclo": 1.4
+        },
+        "Left Upper Arm": {
+          "fclo": 1.1,
+          "iclo": 0.3
+        },
+        "Right Upper Arm": {
+          "fclo": 1.1,
+          "iclo": 0.3
+        },
+        "Left Lower Arm": {
+          "fclo": 1,
+          "iclo": 0
+        },
+        "Right Lower Arm": {
+          "fclo": 1,
+          "iclo": 0
+        },
+        "Left Hand": {
+          "fclo": 1,
+          "iclo": 0
+        },
+        "Right Hand": {
+          "fclo": 1,
+          "iclo": 0
+        },
+        "Left Thigh": {
+          "fclo": 1.1,
+          "iclo": 0.6
+        },
+        "Right Thigh": {
+          "fclo": 1.1,
+          "iclo": 0.6
+        },
+        "Left Lower Leg": {
+          "fclo": 1,
+          "iclo": 0
+        },
+        "Right Lower Leg": {
+          "fclo": 1,
+          "iclo": 0
+        },
+        "Left Foot": {
+          "fclo": 1.1,
+          "iclo": 0.4
+        },
+        "Right Foot": {
+          "fclo": 1.1,
+          "iclo": 0.4
         }
-    },
-
+      }
+    }
   ],
 
   "phases": [
@@ -102,8 +101,8 @@
       "met_activity_name": "Seated",
       "met": 1,
       "default_data": {
-        "rh": 0.50,
-        "v": 0.10,
+        "rh": 0.5,
+        "v": 0.1,
         "solar": 0,
         "ta": 24,
         "mrt": 24
@@ -114,7 +113,7 @@
           "mrt": -7.447,
           "rh": 0.884,
           "solar": 0.857,
-          "ta": -7.900,
+          "ta": -7.9,
           "v": 0.943
         },
         "Head": {
@@ -122,10 +121,10 @@
           "rh": 0.875,
           "solar": 0.286,
           "ta": -7.938,
-          "v": 0.300
+          "v": 0.3
         }
       }
-      },
+    },
     {
       "start_time": 30,
       "ramp": false,
@@ -134,8 +133,8 @@
       "met_activity_name": "Seated",
       "met": 1,
       "default_data": {
-        "rh": 0.50,
-        "v": 0.10,
+        "rh": 0.5,
+        "v": 0.1,
         "solar": 0,
         "ta": 15,
         "mrt": 15
@@ -150,15 +149,13 @@
       "met_activity_name": "Seated",
       "met": 1,
       "default_data": {
-        "rh": 0.50,
-        "v": 0.10,
+        "rh": 0.5,
+        "v": 0.1,
         "solar": 0,
         "ta": 24,
         "mrt": 24
       },
       "clo_ensemble_name": "Seatbelt_seat"
     }
-
-
   ]
 }

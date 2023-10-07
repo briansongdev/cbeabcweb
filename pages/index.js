@@ -28,7 +28,22 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuItemOption,
+  MenuGroup,
+  MenuOptionGroup,
+  MenuDivider,
   Tooltip,
+  ModalHeader,
+  ModalCloseButton,
+  ModalFooter,
+  Input,
+  InputGroup,
+  InputLeftAddon,
+  InputLeftElement,
 } from "@chakra-ui/react";
 import RSelect from "react-select";
 import Creatable from "react-select/creatable";
@@ -44,8 +59,10 @@ import {
   SpinnerIcon,
   StarIcon,
 } from "@chakra-ui/icons";
+import { ImDroplet } from "react-icons/im";
+import clo_correspondence from "../reference/local clo input/clothing_ensembles.json";
 import Head from "next/head";
-import { useEffect, useState, useRef, Suspense, useMemo } from "react";
+import { useEffect, useState, Suspense, useMemo } from "react";
 import axios from "axios";
 import ReactECharts from "echarts-for-react";
 import { Canvas } from "@react-three/fiber";
@@ -131,43 +148,24 @@ const met_auto = [
   },
 ];
 
-const clo_correspondence = [
-  {
-    name: "Nude",
-    clo: 0,
-    description: "Nude",
-  },
-  {
-    name: "CATARC_Summer_1",
-    clo: 0.4,
-    description: "T-shirt, short pants, and sandals",
-  },
-  {
-    name: "CATARC_Winter_1",
-    clo: 1,
-    description:
-      "Long sleeve shirts, cashmere sweater, jacket, long pants and inner pants, socks, and sneakers",
-  },
-];
-
 const graphsVals = [
   { label: "Overall", value: 0 },
-  { label: "Head", value: 1 },
-  { label: "Chest", value: 2 },
-  { label: "Back", value: 3 },
-  { label: "Pelvis", value: 4 },
-  { label: "Left Upper Arm", value: 5 },
-  { label: "Right Upper Arm", value: 6 },
-  { label: "Left Lower Arm", value: 7 },
-  { label: "Right Lower Arm", value: 8 },
-  { label: "Left Hand", value: 9 },
-  { label: "Right Hand", value: 10 },
-  { label: "Left Thigh", value: 11 },
-  { label: "Right Thigh", value: 12 },
-  { label: "Left Lower Leg", value: 13 },
-  { label: "Right Lower Leg", value: 14 },
-  { label: "Left Foot", value: 15 },
-  { label: "Right Foot", value: 16 },
+  { label: "Head", value: 1, stand: 1.0, sit: 1.0 },
+  { label: "Chest", value: 2, stand: 0.82, sit: 0.77 },
+  { label: "Back", value: 3, stand: 0.82, sit: 0.77 },
+  { label: "Pelvis", value: 4, stand: 0.65, sit: 0.65 },
+  { label: "Left Upper Arm", value: 5, stand: 0.82, sit: 0.77 },
+  { label: "Right Upper Arm", value: 6, stand: 0.82, sit: 0.77 },
+  { label: "Left Lower Arm", value: 7, stand: 0.65, sit: 0.65 },
+  { label: "Right Lower Arm", value: 8, stand: 0.65, sit: 0.65 },
+  { label: "Left Hand", value: 9, stand: 0.47, sit: 0.54 },
+  { label: "Right Hand", value: 10, stand: 0.47, sit: 0.54 },
+  { label: "Left Thigh", value: 11, stand: 0.47, sit: 0.54 },
+  { label: "Right Thigh", value: 12, stand: 0.47, sit: 0.54 },
+  { label: "Left Lower Leg", value: 13, stand: 0.24, sit: 0.23 },
+  { label: "Right Lower Leg", value: 14, stand: 0.24, sit: 0.23 },
+  { label: "Left Foot", value: 15, stand: 0.0, sit: 0.0 },
+  { label: "Right Foot", value: 16, stand: 0.0, sit: 0.0 },
 ];
 
 export default function WithSubnavigation() {
@@ -175,20 +173,23 @@ export default function WithSubnavigation() {
   const [params, setParams] = useState([
     {
       exposure_duration: 60,
-      air_temperature: 25,
-      radiant_temperature: 25,
-      air_speed: 0.1,
-      relative_humidity: 50,
+      air_temperature: Array(16).fill(25),
+      radiant_temperature: Array(16).fill(25),
+      air_speed: Array(16).fill(0.1),
+      relative_humidity: Array(16).fill(50),
       met_value: 1,
       clo_value: "1",
-      stratification: 0,
-      // 0 = no strat, 1 = standing, 2 = seated
       at_delta: 0,
       mr_delta: 0,
       as_delta: 0,
       rh_delta: 0,
+      at_d: 25,
+      rt_d: 25,
+      ai_d: 0.1,
+      rh_d: 50,
     },
   ]);
+  const [currentlyEditing, setCurrentlyEditing] = useState(1);
   const [cache, setCache] = useState();
 
   const [numtoGraph, setNumToGraph] = useState(0);
@@ -198,6 +199,7 @@ export default function WithSubnavigation() {
   const [graphOptions, setGraph] = useState();
   const [graphData, setData] = useState([]);
   const loadingModal = useDisclosure();
+  const editModal = useDisclosure();
   const [bodyColors, setBodyColors] = useState([]);
   const [currentColorArray, setCurrentColorArray] = useState([
     "white",
@@ -219,7 +221,6 @@ export default function WithSubnavigation() {
     "white",
     "white",
   ]);
-  const [notInStratMenu, setStratMenuVisible] = useState(true);
 
   const toast = useToast();
 
@@ -229,121 +230,106 @@ export default function WithSubnavigation() {
     {
       title: "Exposure time",
       icon: <TimeIcon color="gray.400" />,
-      unit: "min",
+      unit: " min",
       val: "exposure_duration",
-      key: "expd",
+      key: "time",
       step: 1,
       precision: 0,
     },
     {
       title: "Ambient temp",
       icon: <SunIcon color="gray.400" />,
-      unit: "°C",
+      unit: " °C",
       val: "air_temperature",
-      key: "ambt",
+      key: "air temp",
       step: 0.1,
       precision: 1,
       deltaKey: "at_delta",
+      tempKey: "at_d",
     },
     {
       title: "Mean rad temp",
       icon: <StarIcon color="gray.400" />,
-      unit: "°C",
+      unit: " °C",
       val: "radiant_temperature",
-      key: "radt",
+      key: "MRT",
       step: 0.1,
       precision: 1,
       deltaKey: "mr_delta",
+      tempKey: "rt_d",
     },
     {
       title: "Air speed",
       icon: <SpinnerIcon color="gray.400" />,
-      unit: "m/s",
+      unit: " m/s",
       val: "air_speed",
-      key: "airsp",
+      key: "speed",
       step: 0.1,
       precision: 1,
       deltaKey: "as_delta",
+      tempKey: "ai_d",
     },
     {
-      title: "Relative humidity",
-      icon: <RepeatIcon color="gray.400" />,
+      title: "Rel humidity",
+      icon: <ImDroplet color="gray" />,
       unit: "%",
       val: "relative_humidity",
-      key: "relhum",
+      key: "humidity",
       step: 1,
       precision: 0,
       deltaKey: "rh_delta",
+      tempKey: "rh_d",
     },
   ];
 
-  const OptionRenderer = ({
-    title,
-    deltaKey,
-    unit,
-    val,
-    key,
-    step,
-    precision,
-  }) => {
+  const OptionRenderer = ({ title, unit, val, icon, key, step, precision }) => {
     return (
       <div key={key}>
         <Text fontWeight="black" mb="10px">
           {title}
         </Text>
-        <HStack width="100%">
-          <NumberInput
-            w="7vw"
-            allowMouseWheel
-            backgroundColor="white"
-            type="number"
-            textAlign="right"
-            value={params[ind][val]}
-            onChange={(e) => {
-              let newState = [...params];
-              newState[ind][val] = parseFloat(e);
-              setParams(newState);
-            }}
-            min={0}
-            max={100}
-            precision={precision}
-            step={step}
-          >
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
-          <Text>{unit}</Text>
-          <Spacer />
-          {!notInStratMenu && params[ind].stratification != 0 && deltaKey ? (
-            <NumberInput
-              w="5vw"
-              allowMouseWheel
-              backgroundColor="white"
-              type="number"
-              textAlign="right"
-              borderColor="yellow.400"
-              value={params[ind][deltaKey]}
-              onChange={(e) => {
-                let newState = [...params];
-                newState[ind][deltaKey] = parseFloat(e);
-                setParams(newState);
-              }}
-              precision={0}
-              step={1}
-            >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-          ) : (
-            <></>
-          )}
-        </HStack>
+        {val != "exposure_duration" ? (
+          <>
+            <HStack width="100%">
+              {icon}
+              <Text>
+                {(
+                  params[ind][val].reduce((a, b) => a + b) /
+                  params[ind][val].length
+                ).toFixed(3)}
+
+                {unit}
+              </Text>
+            </HStack>
+          </>
+        ) : (
+          <></>
+        )}
+        {val == "exposure_duration" ? (
+          <HStack>
+            <InputGroup w="7vw">
+              <InputLeftElement>{icon}</InputLeftElement>
+              <Input
+                backgroundColor="white"
+                type="number"
+                textAlign="right"
+                value={params[ind][val]}
+                onChange={(e) => {
+                  let newState = [...params];
+                  newState[ind][val] = parseInt(e.target.value);
+                  setParams(newState);
+                }}
+                min={0}
+                max={100}
+                precision={precision}
+                step={step}
+              ></Input>
+            </InputGroup>
+            <Text>{unit}</Text>
+          </HStack>
+        ) : (
+          <></>
+        )}
       </div>
     );
   };
@@ -367,15 +353,7 @@ export default function WithSubnavigation() {
           }
         }
       },
-      mouseover: (params) => {
-        // let tempColorArr = [];
-        // for (let i = 0; i < bodyColors[params.dataIndex].length; i++) {
-        //   tempColorArr.push(
-        //     bodyColors[params.dataIndex][i][params.seriesIndex]
-        //   );
-        // }
-        // setCurrentColorArray(tempColorArr);
-      },
+      mouseover: (params) => {},
     }),
     [cache, bodyColors]
   );
@@ -529,6 +507,220 @@ export default function WithSubnavigation() {
           </ModalBody>
         </ModalContent>
       </Modal>
+      <Modal
+        isCentered
+        isOpen={editModal.isOpen}
+        closeOnEsc={false}
+        closeOnOverlayClick={false}
+        onClose={editModal.onClose}
+      >
+        <ModalOverlay />
+        <ModalContent maxW="90%" maxH="90%" overflowY="scroll">
+          <ModalHeader>
+            Edit {displayOptions[currentlyEditing].title.toLowerCase()}
+          </ModalHeader>
+          <ModalBody>
+            <HStack justifyContent="center">
+              <NumberInput
+                w="7vw"
+                allowMouseWheel
+                backgroundColor="white"
+                type="number"
+                textAlign="right"
+                value={params[ind][displayOptions[currentlyEditing].tempKey]}
+                onChange={(e) => {
+                  let newState = [...params];
+                  newState[ind][displayOptions[currentlyEditing].tempKey] =
+                    parseFloat(e);
+                  setParams(newState);
+                }}
+                min={0}
+                max={100}
+                precision={displayOptions[currentlyEditing].precision}
+                step={displayOptions[currentlyEditing].step}
+              >
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+              <Text>{displayOptions[currentlyEditing].unit}</Text>
+              <NumberInput
+                w="6vw"
+                allowMouseWheel
+                backgroundColor="white"
+                textAlign="right"
+                value={params[ind][displayOptions[currentlyEditing].deltaKey]}
+                onChange={(e) => {
+                  let newState = [...params];
+                  newState[ind][displayOptions[currentlyEditing].deltaKey] =
+                    parseFloat(e);
+                  setParams(newState);
+                }}
+                min={-100}
+                max={100}
+                step={1}
+              >
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+              <Text>% delta</Text>
+              <Button
+                colorScheme="yellow"
+                onClick={() => {
+                  let newState = [...params];
+                  newState[ind][displayOptions[currentlyEditing].val] = Array(
+                    16
+                  ).fill(params[ind][displayOptions[currentlyEditing].tempKey]);
+                  setParams(newState);
+                }}
+              >
+                Apply to all
+              </Button>
+              <Button
+                onClick={() => {
+                  let newState = [...params],
+                    newArray = [];
+                  for (let i = 0; i < 16; i++) {
+                    newArray.push(
+                      params[ind][displayOptions[currentlyEditing].tempKey] +
+                        (params[ind][
+                          displayOptions[currentlyEditing].deltaKey
+                        ] /
+                          100) *
+                          (1 - graphsVals[i + 1].stand)
+                    );
+                  }
+                  newState[ind][displayOptions[currentlyEditing].val] =
+                    newArray;
+                  setParams(newState);
+                }}
+              >
+                Stratify standing
+              </Button>
+              <Button
+                onClick={() => {
+                  let newState = [...params],
+                    newArray = [];
+                  for (let i = 0; i < 16; i++) {
+                    newArray.push(
+                      params[ind][displayOptions[currentlyEditing].tempKey] +
+                        (params[ind][
+                          displayOptions[currentlyEditing].deltaKey
+                        ] /
+                          100) *
+                          (1 - graphsVals[i + 1].sit)
+                    );
+                  }
+                  newState[ind][displayOptions[currentlyEditing].val] =
+                    newArray;
+                  setParams(newState);
+                }}
+              >
+                Stratify sitting
+              </Button>
+            </HStack>
+            <HStack justifyContent="center" mt={3}>
+              {displayOptions[currentlyEditing].key == "MRT" ? (
+                <Button colorScheme="pink">Import from MRT JSON file</Button>
+              ) : (
+                <></>
+              )}
+            </HStack>
+            <HStack w="100%" justifyContent="center" spacing={8} margin={2}>
+              {params[ind][displayOptions[currentlyEditing].val].map(
+                (value, indx) => {
+                  if (indx < 8)
+                    return (
+                      <VStack>
+                        <Text>{graphsVals[indx + 1].label}</Text>
+                        <NumberInput
+                          w="7vw"
+                          allowMouseWheel
+                          backgroundColor="white"
+                          type="number"
+                          textAlign="right"
+                          value={value}
+                          onChange={(e) => {
+                            let newState = [...params];
+                            newState[ind][displayOptions[currentlyEditing].val][
+                              indx
+                            ] = parseFloat(e);
+                            setParams(newState);
+                          }}
+                          min={0}
+                          max={100}
+                          precision={displayOptions[currentlyEditing].precision}
+                          step={displayOptions[currentlyEditing].step}
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                      </VStack>
+                    );
+                }
+              )}
+            </HStack>
+            <HStack w="100%" justifyContent="center" spacing={8} margin={2}>
+              {params[ind][displayOptions[currentlyEditing].val].map(
+                (value, indx) => {
+                  if (indx >= 8)
+                    return (
+                      <VStack>
+                        <Text>{graphsVals[indx + 1].label}</Text>
+                        <NumberInput
+                          w="7vw"
+                          allowMouseWheel
+                          backgroundColor="white"
+                          type="number"
+                          textAlign="right"
+                          value={value}
+                          onChange={(e) => {
+                            let newState = [...params];
+                            newState[ind][displayOptions[currentlyEditing].val][
+                              indx
+                            ] = parseFloat(e);
+                            setParams(newState);
+                          }}
+                          min={0}
+                          max={100}
+                          precision={displayOptions[currentlyEditing].precision}
+                          step={displayOptions[currentlyEditing].step}
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                      </VStack>
+                    );
+                }
+              )}
+            </HStack>
+          </ModalBody>
+          <ModalFooter>
+            <HStack w="100%" justifyContent="end">
+              <Text fontWeight="bold">Changes are automatically saved.</Text>
+              <Button
+                colorScheme="yellow"
+                textColor="#007AFF"
+                ml={2}
+                onClick={editModal.onClose}
+              >
+                Done
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
       <Flex
         bg={useColorModeValue("white", "gray.800")}
         color={useColorModeValue("gray.600", "white")}
@@ -652,17 +844,20 @@ export default function WithSubnavigation() {
                 onClick={() => {
                   params.push({
                     exposure_duration: 60,
-                    air_temperature: 25,
-                    radiant_temperature: 25,
-                    air_speed: 0.1,
-                    relative_humidity: 50,
+                    air_temperature: Array(16).fill(25),
+                    radiant_temperature: Array(16).fill(25),
+                    air_speed: Array(16).fill(0.1),
+                    relative_humidity: Array(16).fill(50),
                     met_value: 1,
                     clo_value: "1",
-                    stratification: 0,
                     at_delta: 0,
                     mr_delta: 0,
                     as_delta: 0,
                     rh_delta: 0,
+                    at_d: 25,
+                    rt_d: 25,
+                    ai_d: 0.1,
+                    rh_d: 50,
                   });
                   setIndex(params.length - 1);
                 }}
@@ -682,7 +877,7 @@ export default function WithSubnavigation() {
                     Condition #{ind + 1}
                   </Text>
                   <Spacer />
-                  <Select
+                  {/* <Select
                     mr={3}
                     backgroundColor="white"
                     onChange={(e) => {
@@ -723,7 +918,7 @@ export default function WithSubnavigation() {
                     >
                       Stratified, sitting
                     </option>
-                  </Select>
+                  </Select> */}
                   <IconButton
                     w="5%"
                     colorScheme="red"
@@ -738,7 +933,7 @@ export default function WithSubnavigation() {
                   ></IconButton>
                 </Flex>
                 <HStack w="100%" alignItems="flex-start">
-                  <VStack w="30%" alignItems="flex-start">
+                  <VStack w="45%" alignItems="flex-start">
                     {displayOptions.map((option) => {
                       return OptionRenderer({
                         title: option.title,
@@ -753,139 +948,127 @@ export default function WithSubnavigation() {
                     })}
                   </VStack>
                   <VStack
-                    pl={10}
-                    w="70%"
+                    pl={0}
+                    w="55%"
                     alignItems="flex-start"
                     justifyContent={"center"}
                   >
-                    {notInStratMenu || params[ind].stratification == 0 ? (
-                      <>
-                        <Text fontWeight="black">Metabolic rate</Text>
-                        <Creatable
-                          instanceId="zjhddjh1oi2euiAUSD901280198"
-                          styles={{
-                            control: (baseStyles, state) => ({
-                              ...baseStyles,
-                              width: "200px",
-                            }),
-                          }}
-                          placeholder="Input value in mets"
-                          isClearable
-                          onChange={(val) => {
-                            let newState = [...params];
-                            if (val) newState[ind].met_value = val.value;
-                            else newState[ind].met_value = -1;
-                            setParams(newState);
-                          }}
-                          onCreateOption={(inputValue) => {
-                            const val = parseFloat(inputValue);
-                            let newState = [...params];
-                            newState[ind].met_value = val;
-                            setParams(newState);
-                            setMetOptions((prev) => [
-                              ...prev,
-                              {
-                                label: val,
-                                value: val,
-                              },
-                            ]);
-                          }}
-                          value
-                          options={metOptions}
-                        />
-                        {params[ind].met_value != -1 ? (
-                          <Text>
-                            Met:{" "}
-                            <span style={{ fontWeight: "bold" }}>
-                              {params[ind].met_value}
-                            </span>
-                          </Text>
-                        ) : (
-                          <></>
-                        )}
-                        <Text fontWeight="black">Clothing level</Text>
-                        <Select
-                          backgroundColor="white"
-                          w="200px"
-                          onChange={(e) => {
-                            let newState = [...params];
-                            newState[ind].clo_value = e.target.value.toString();
-                            setParams(newState);
-                          }}
-                          value={params[ind].clo_value}
-                        >
-                          {clo_correspondence.map((clo, index) => {
-                            return (
-                              <option
-                                size="md"
-                                key={clo.clo}
-                                value={index.toString()}
-                                style={{ backgroundColor: "white" }}
-                              >
-                                {clo.name}
-                              </option>
-                            );
-                          })}
-                        </Select>
-                        <Text color="gray.600">
-                          {clo_correspondence[params[ind].clo_value].clo} clo -{" "}
-                          <span style={{ fontSize: "13px", color: "gray.600" }}>
-                            {
-                              clo_correspondence[params[ind].clo_value]
-                                .description
-                            }
-                          </span>
-                        </Text>
-                        {params[ind].stratification != 0 ? (
-                          <Center w="100%">
-                            <Tooltip
-                              label={"Switch to delta input view"}
-                              bg="#007AFF"
-                              hasArrow
-                            >
-                              <IconButton
-                                colorScheme="blue"
-                                icon={<RepeatIcon />}
-                                onClick={() => {
-                                  setStratMenuVisible(false);
-                                }}
-                              ></IconButton>
-                            </Tooltip>
-                          </Center>
-                        ) : (
-                          <></>
-                        )}
-                      </>
+                    <Text fontWeight="black">Metabolic rate</Text>
+                    <Creatable
+                      instanceId="zjhddjh1oi2euiAUSD901280198"
+                      styles={{
+                        control: (baseStyles, state) => ({
+                          ...baseStyles,
+                          width: "200px",
+                        }),
+                      }}
+                      placeholder="Input value in mets"
+                      isClearable
+                      onChange={(val) => {
+                        let newState = [...params];
+                        if (val) newState[ind].met_value = val.value;
+                        else newState[ind].met_value = -1;
+                        setParams(newState);
+                      }}
+                      onCreateOption={(inputValue) => {
+                        const val = parseFloat(inputValue);
+                        let newState = [...params];
+                        newState[ind].met_value = val;
+                        setParams(newState);
+                        setMetOptions((prev) => [
+                          ...prev,
+                          {
+                            label: val,
+                            value: val,
+                          },
+                        ]);
+                      }}
+                      value
+                      options={metOptions}
+                    />
+                    {params[ind].met_value != -1 ? (
+                      <Text>
+                        Met:{" "}
+                        <span style={{ fontWeight: "bold" }}>
+                          {params[ind].met_value}
+                        </span>
+                      </Text>
                     ) : (
-                      <>
-                        <Text
-                          fontWeight="black"
-                          color="yellow.500"
-                          textAlign={"center"}
-                          mt={3}
-                        >
-                          You&apos;re in stratified menu mode. Yellow fields are
-                          head-to-foot deltas.
-                        </Text>
-                        <Center w="100%">
-                          <Tooltip
-                            label={"Switch to metabolism/clothing view"}
-                            bg="#007AFF"
-                            hasArrow
-                          >
-                            <IconButton
-                              colorScheme="blue"
-                              icon={<RepeatIcon />}
-                              onClick={() => {
-                                setStratMenuVisible(true);
-                              }}
-                            ></IconButton>
-                          </Tooltip>
-                        </Center>
-                      </>
+                      <></>
                     )}
+                    <Text fontWeight="black">Clothing level</Text>
+                    <Select
+                      backgroundColor="white"
+                      w="200px"
+                      onChange={(e) => {
+                        let newState = [...params];
+                        newState[ind].clo_value = e.target.value.toString();
+                        setParams(newState);
+                      }}
+                      value={params[ind].clo_value}
+                    >
+                      {clo_correspondence.map((clo, index) => {
+                        return (
+                          <option
+                            size="md"
+                            key={clo.description}
+                            value={index.toString()}
+                            style={{ backgroundColor: "white" }}
+                          >
+                            {clo.ensemble_name}
+                          </option>
+                        );
+                      })}
+                    </Select>
+                    <Text color="gray.600">
+                      {
+                        clo_correspondence[params[ind].clo_value].whole_body
+                          .fclo
+                      }{" "}
+                      clo -{" "}
+                      <span style={{ fontSize: "13px", color: "gray.600" }}>
+                        {clo_correspondence[params[ind].clo_value].description}
+                      </span>
+                    </Text>
+                    <Menu>
+                      <MenuButton
+                        as={Button}
+                        rightIcon={<ChevronDownIcon />}
+                        w="100%"
+                        colorScheme="yellow"
+                        textColor="#007AFF"
+                      >
+                        Edit data
+                      </MenuButton>
+                      <MenuList>
+                        {displayOptions.map((e, ind) => {
+                          if (ind >= 1)
+                            return (
+                              <MenuItem
+                                key={e.key}
+                                onClick={() => {
+                                  setCurrentlyEditing(ind);
+                                  editModal.onOpen();
+                                }}
+                              >
+                                <Text mr={2}>
+                                  Edit{" "}
+                                  <span style={{ fontWeight: "bold" }}>
+                                    {e.key}
+                                  </span>
+                                </Text>
+                                {e.icon}
+                              </MenuItem>
+                            );
+                        })}
+                      </MenuList>
+                    </Menu>
                   </VStack>
                 </HStack>
+                <Text>
+                  These values are averages. Open the advanced editor to see
+                  your input data more accurately.
+                </Text>
               </>
             </VStack>
             <div
@@ -908,33 +1091,28 @@ export default function WithSubnavigation() {
                 onClick={async () => {
                   loadingModal.onOpen();
                   try {
-                    let phases = [],
-                      deltas = [];
+                    let phases = [];
                     for (let i = 0; i < params.length; i++) {
                       phases.push({
                         exposure_duration: params[i].exposure_duration,
                         met_activity_name: "Custom-defined Met Activity",
                         met_activity_value: parseFloat(params[i].met_value),
-                        relative_humidity: params[i].relative_humidity,
+                        relative_humidity: params[i].relative_humidity.map(
+                          (x) => {
+                            return x / 100;
+                          }
+                        ),
                         air_speed: params[i].air_speed,
                         air_temperature: params[i].air_temperature,
                         radiant_temperature: params[i].radiant_temperature,
                         clo_ensemble_name:
                           clo_correspondence[parseInt(params[i].clo_value)]
-                            .name,
-                        stratification: params[i].stratification,
-                      });
-                      deltas.push({
-                        at: params[i].at_delta,
-                        mr: params[i].mr_delta,
-                        as: params[i].as_delta,
-                        rh: params[i].rh_delta,
+                            .ensemble_name,
                       });
                     }
                     const metrics = await axios
                       .post("/api/process", {
                         phases: phases,
-                        deltas: deltas,
                       })
                       .then((res) => {
                         let tempArr = [];
