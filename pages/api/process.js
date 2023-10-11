@@ -62,11 +62,19 @@ export default async function handler(req, res) {
           met_activity_name: req.body.phases[i].met_activity_name,
           met: req.body.phases[i].met_activity_value,
           default_data: {
-            rh: req.body.phases[i].relative_humidity[0] / 100,
-            v: req.body.phases[i].air_speed[0],
+            rh:
+              req.body.phases[i].relative_humidity.reduce((a, b) => a + b) /
+              (req.body.phases[i].relative_humidity.length * 100),
+            v:
+              req.body.phases[i].air_speed.reduce((a, b) => a + b) /
+              req.body.phases[i].air_speed.length,
             solar: 0,
-            ta: req.body.phases[i].air_temperature[0],
-            mrt: req.body.phases[i].radiant_temperature[0],
+            ta:
+              req.body.phases[i].air_temperature.reduce((a, b) => a + b) /
+              req.body.phases[i].air_temperature.length,
+            mrt:
+              req.body.phases[i].radiant_temperature.reduce((a, b) => a + b) /
+              req.body.phases[i].radiant_temperature.length,
           },
           clo_ensemble_name: req.body.phases[i].clo_ensemble_name,
           segment_data: {

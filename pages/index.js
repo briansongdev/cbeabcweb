@@ -1023,7 +1023,7 @@ export default function WithSubnavigation() {
                     <Text color="gray.600">
                       {
                         clo_correspondence[params[ind].clo_value].whole_body
-                          .fclo
+                          .iclo
                       }{" "}
                       clo -{" "}
                       <span style={{ fontSize: "13px", color: "gray.600" }}>
