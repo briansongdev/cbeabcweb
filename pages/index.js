@@ -32,18 +32,16 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  MenuItemOption,
-  MenuGroup,
-  MenuOptionGroup,
-  MenuDivider,
-  Tooltip,
   ModalHeader,
-  ModalCloseButton,
   ModalFooter,
   Input,
   InputGroup,
-  InputLeftAddon,
   InputLeftElement,
+  Editable,
+  EditablePreview,
+  EditableInput,
+  useEditableControls,
+  ButtonGroup,
 } from "@chakra-ui/react";
 import RSelect from "react-select";
 import Creatable from "react-select/creatable";
@@ -58,6 +56,8 @@ import {
   RepeatIcon,
   SpinnerIcon,
   StarIcon,
+  CheckIcon,
+  EditIcon,
 } from "@chakra-ui/icons";
 import { ImDroplet } from "react-icons/im";
 import clo_correspondence from "../reference/local clo input/clothing_ensembles.json";
@@ -172,6 +172,7 @@ export default function WithSubnavigation() {
   const { isOpen, onToggle } = useDisclosure();
   const [params, setParams] = useState([
     {
+      condition_name: "Condition #1",
       exposure_duration: 60,
       air_temperature: Array(16).fill(25),
       radiant_temperature: Array(16).fill(25),
@@ -195,6 +196,7 @@ export default function WithSubnavigation() {
   const [numtoGraph, setNumToGraph] = useState(0);
   const [fullData, setFullData] = useState([]);
   const [ind, setIndex] = useState(0);
+  const [currIndex, setCurrIndex] = useState([0, 0]);
   const [metOptions, setMetOptions] = useState(met_auto);
   const [graphOptions, setGraph] = useState();
   const [graphData, setData] = useState([]);
@@ -221,6 +223,31 @@ export default function WithSubnavigation() {
     "white",
     "white",
   ]);
+
+  function EditableControls() {
+    const {
+      isEditing,
+      getSubmitButtonProps,
+      getCancelButtonProps,
+      getEditButtonProps,
+    } = useEditableControls();
+
+    return isEditing ? (
+      <IconButton
+        colorScheme="yellow"
+        textColor="#007AFF"
+        icon={<CheckIcon />}
+        {...getSubmitButtonProps()}
+      />
+    ) : (
+      <IconButton
+        colorScheme="yellow"
+        textColor="#007AFF"
+        icon={<EditIcon />}
+        {...getEditButtonProps()}
+      />
+    );
+  }
 
   const toast = useToast();
 
@@ -296,7 +323,7 @@ export default function WithSubnavigation() {
                 {(
                   params[ind][val].reduce((a, b) => a + b) /
                   params[ind][val].length
-                ).toFixed(3)}
+                ).toFixed(1)}
 
                 {unit}
               </Text>
@@ -349,6 +376,7 @@ export default function WithSubnavigation() {
           curr += cache[i].exposure_duration;
           if (curr > params.dataIndex) {
             setIndex(i);
+            setCurrIndex([i, params.dataIndex]);
             break;
           }
         }
@@ -831,7 +859,9 @@ export default function WithSubnavigation() {
                         else setIndex(indx);
                       }}
                     >
-                      Condition {indx + 1}
+                      {params[indx].condition_name.length > 13
+                        ? params[indx].condition_name.substring(0, 13) + "..."
+                        : params[indx].condition_name}
                     </Button>
                   );
                 })}
@@ -843,6 +873,8 @@ export default function WithSubnavigation() {
                 icon={<AddIcon />}
                 onClick={() => {
                   params.push({
+                    condition_name:
+                      "Condition #" + (params.length + 1).toString(),
                     exposure_duration: 60,
                     air_temperature: Array(16).fill(25),
                     radiant_temperature: Array(16).fill(25),
@@ -873,52 +905,30 @@ export default function WithSubnavigation() {
             >
               <>
                 <Flex w="100%" alignItems="center">
-                  <Text fontSize="2xl" fontWeight="800">
-                    Condition #{ind + 1}
-                  </Text>
-                  <Spacer />
-                  {/* <Select
-                    mr={3}
-                    backgroundColor="white"
-                    onChange={(e) => {
-                      let newState = [...params];
-                      newState[ind].stratification = parseInt(e.target.value);
-                      setParams(newState);
-                      if (
-                        parseInt(e.target.value) == 1 ||
-                        parseInt(e.target.value) == 2
-                      ) {
-                        setStratMenuVisible(false);
-                      } else setStratMenuVisible(true);
-                    }}
-                    value={params[ind].stratification.toString()}
-                    w="10vw"
+                  <Editable
+                    defaultValue={params[ind].condition_name}
+                    fontSize="2xl"
+                    fontWeight="bold"
+                    isPreviewFocusable={false}
                   >
-                    <option
-                      size="md"
-                      key={"Option1"}
-                      value="0"
-                      style={{ backgroundColor: "white" }}
-                    >
-                      Uniform
-                    </option>
-                    <option
-                      size="md"
-                      key={"Option2"}
-                      value="1"
-                      style={{ backgroundColor: "white" }}
-                    >
-                      Stratified, standing
-                    </option>
-                    <option
-                      size="md"
-                      key={"Option3"}
-                      value="2"
-                      style={{ backgroundColor: "white" }}
-                    >
-                      Stratified, sitting
-                    </option>
-                  </Select> */}
+                    <EditablePreview mr="10px" />
+                    <Input
+                      as={EditableInput}
+                      onChange={(e) => {
+                        let tempParams = [...params];
+                        tempParams[ind].condition_name = e.target.value;
+                        if (e.target.value.length == 0) {
+                          tempParams[ind].condition_name =
+                            "Condition #" + ind.toString();
+                        }
+                        setParams(tempParams);
+                      }}
+                      width="200px"
+                      mr="10px"
+                    />
+                    <EditableControls />
+                  </Editable>
+                  <Spacer />
                   <IconButton
                     w="5%"
                     colorScheme="red"
@@ -1034,7 +1044,7 @@ export default function WithSubnavigation() {
                       <MenuButton
                         as={Button}
                         rightIcon={<ChevronDownIcon />}
-                        w="100%"
+                        w="200px"
                         colorScheme="yellow"
                         textColor="#007AFF"
                       >
@@ -1212,6 +1222,7 @@ export default function WithSubnavigation() {
                         for (let j = 0; j < fullData.length; j++) {
                           changedArr.push(fullData[j][val.value]);
                         }
+                        setData(changedArr);
                         setGraph(
                           graphBuilderOptions({
                             title:
@@ -1279,13 +1290,35 @@ export default function WithSubnavigation() {
                           </Suspense>
                         </Canvas>
                       </div>
+                      <Text fontWeight="bold">
+                        {params[currIndex[0]].condition_name}{" "}
+                        <span style={{ color: "red", marginLeft: "5px" }}>
+                          {" "}
+                          {currIndex[1]} mins{" "}
+                        </span>
+                      </Text>
+                      <Text
+                        fontWeight="black"
+                        color={colorComfort(graphData[currIndex[1]].comfort)}
+                      >
+                        {graphData[currIndex[1]].comfort.toFixed(2)} comfort
+                      </Text>
+                      <Text
+                        color={colorSensation(
+                          graphData[currIndex[1]].sensation
+                        )}
+                      >
+                        {" "}
+                        {graphData[currIndex[1]].sensation.toFixed(2)} sensation
+                      </Text>
                     </VStack>
                   </HStack>
                 </VStack>
               </>
             ) : (
               <Text>
-                No simulation run yet. Please input data and hit Simulate.
+                No simulation run yet. Please input data and{" "}
+                <span style={{ fontWeight: "bold" }}>Run simulation</span>.
               </Text>
             )}
           </VStack>
