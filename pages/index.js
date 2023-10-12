@@ -190,6 +190,7 @@ export default function WithSubnavigation() {
       rh_d: 50,
     },
   ]);
+  const [metIndex, setMetIndex] = useState(1);
   const [currentlyEditing, setCurrentlyEditing] = useState(1);
   const [cache, setCache] = useState();
 
@@ -664,7 +665,7 @@ export default function WithSubnavigation() {
                 (value, indx) => {
                   if (indx < 8)
                     return (
-                      <VStack>
+                      <VStack key={indx}>
                         <Text>{graphsVals[indx + 1].label}</Text>
                         <NumberInput
                           w="7vw"
@@ -972,12 +973,20 @@ export default function WithSubnavigation() {
                           width: "200px",
                         }),
                       }}
-                      placeholder="Input value in mets"
                       isClearable
                       onChange={(val) => {
                         let newState = [...params];
                         if (val) newState[ind].met_value = val.value;
-                        else newState[ind].met_value = -1;
+                        else {
+                          newState[ind].met_value = -1;
+                          setMetIndex(-1);
+                        }
+                        for (let i = 0; i < metOptions.length; i++) {
+                          if (metOptions[i] == val) {
+                            setMetIndex(i);
+                            break;
+                          }
+                        }
                         setParams(newState);
                       }}
                       onCreateOption={(inputValue) => {
@@ -992,8 +1001,9 @@ export default function WithSubnavigation() {
                             value: val,
                           },
                         ]);
+                        setMetIndex(metOptions.length);
                       }}
-                      value
+                      value={metIndex != -1 ? metOptions[metIndex] : null}
                       options={metOptions}
                     />
                     {params[ind].met_value != -1 ? (
@@ -1247,6 +1257,13 @@ export default function WithSubnavigation() {
                       </Box>
                     </VStack>
                     <VStack w="25%">
+                      <Text fontWeight="bold">
+                        {params[currIndex[0]].condition_name}{" "}
+                        <span style={{ color: "red", marginLeft: "5px" }}>
+                          {" "}
+                          {currIndex[1]} mins{" "}
+                        </span>
+                      </Text>
                       <div
                         style={{
                           height: "50vh",
@@ -1290,13 +1307,7 @@ export default function WithSubnavigation() {
                           </Suspense>
                         </Canvas>
                       </div>
-                      <Text fontWeight="bold">
-                        {params[currIndex[0]].condition_name}{" "}
-                        <span style={{ color: "red", marginLeft: "5px" }}>
-                          {" "}
-                          {currIndex[1]} mins{" "}
-                        </span>
-                      </Text>
+                      <Text>Drag to rotate model.</Text>
                       <Text
                         fontWeight="black"
                         color={colorComfort(graphData[currIndex[1]].comfort)}
@@ -1304,6 +1315,7 @@ export default function WithSubnavigation() {
                         {graphData[currIndex[1]].comfort.toFixed(2)} comfort
                       </Text>
                       <Text
+                        fontWeight="black"
                         color={colorSensation(
                           graphData[currIndex[1]].sensation
                         )}
